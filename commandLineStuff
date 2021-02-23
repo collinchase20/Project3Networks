@@ -1,0 +1,1 @@
+./sim -h --test-dir /tests --router router <all|milestone>
