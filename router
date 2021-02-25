@@ -3,6 +3,7 @@ import argparse
 import json
 import select
 import socket
+import copy
 
 ##########################################################################################
 
@@ -40,11 +41,11 @@ class Router:
   """ Your Router """
   def __init__(self, networks, asn):
     self.routes = {}
-    self.updates = {}
-    self.relations = {}
-    self.sockets = {}
+    self.updates = {}        #{192.168.0.2 : {"network": "192.168.0.0", "netmask": "255.255.255.0", "localpref": 100, "ASPath": [1], "origin": "EGP", "selfOrigin": true}}
+    self.relations = {}      #{192.168.0.2 : cust}
+    self.sockets = {}        #{192.168.0.2 : socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)}
     self.asn = asn
-    self.forwardTable = {}
+    self.forwardTable = []
     for relationship in networks:
       network, relation = relationship.split("-")
       self.sockets[network] = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
@@ -55,8 +56,11 @@ class Router:
   def lookup_routes(self, daddr):
     """ Lookup all valid routes for an address """
     # TODO
-    print("This is the address: " + daddr)
+    print("Starting to lookup routes for this address: " + daddr)
     outroutes = []
+    for packet in self.forwardTable:
+      if packet["network"].split(".")[0] == daddr.split(".")[0]:
+        outroutes.append(packet[PEER])
     return outroutes
 
   def get_shortest_as_path(self, routes):
@@ -67,20 +71,32 @@ class Router:
 
   def get_highest_preference(self, routes):
     """ select the route with the shortest AS Path """
+    #This is the route with the highest local preference value
     # TODO
     outroutes = []
+    highestPreference = 0
+    for route in routes:
+      if route[LPRF] > highestPreference:
+        highestPreference = route[LPRF]
+        outroutes.append(routes)
+
     return outroutes
 
   def get_self_origin(self, routes):
     """ select self originating routes """
+    #These are the routes where "selfOrigin" is true
     # TODO
     outroutes = []
+    for route in routes:
+      if route[SORG] == "true":
+        outroutes.append(route)
     return outroutes
 
   def get_origin_routes(self, routes):
     """ select origin routes: EGP > IGP > UNK """
     # TODO
     outroutes = []
+
     return outroutes
 
   def filter_relationships(self, srcif, routes):
@@ -95,10 +111,10 @@ class Router:
     return lowestRoutes
 
 
-
   def get_route(self, srcif, daddr):
     """ Select the best route for a given address """
     # TODO
+    print("Starting get_route")
     peer = None
     routes = self.lookup_routes(daddr)
     for val in routes:
@@ -135,14 +151,30 @@ class Router:
   def update(self, srcif, packet):
     """ handle update packets """
     # TODO
+    #Map our update message, Source mapped to the Message
+    self.updates[packet['src']] = packet
+
+    #Update the Forwarding Table
     message = packet["msg"]
-    self.forwardTable[NTWK] = message[NTWK]
-    self.forwardTable[NMSK] = message[NMSK]
-    self.forwardTable[LPRF] = message[LPRF]
-    self.forwardTable[APTH] = message[APTH]
-    self.forwardTable[ORIG] = message[ORIG]
-    self.forwardTable[SORG] = message[SORG]
-    return False
+    tempDictionary = {}
+    tempDictionary[NTWK] = message[NTWK]
+    tempDictionary[NMSK] = message[NMSK]
+    tempDictionary[LPRF] = message[LPRF]
+    tempDictionary[APTH] = message[APTH]
+    tempDictionary[ORIG] = message[ORIG]
+    tempDictionary[SORG] = message[SORG]
+    tempDictionary[PEER] = packet['src']
+    self.forwardTable.append(tempDictionary)
+
+    #Old destination is our new source,
+    #And the socket becomes our new destination
+    for s in self.sockets:
+      copiedPacket = copy.deepcopy(packet)
+      copiedPacket[SRCE] = copiedPacket[DEST]
+      copiedPacket[DEST] = s
+      self.forward(s, copiedPacket)
+
+    return True
 
   def revoke(self, packet):
     """ handle revoke packets """
@@ -157,17 +189,17 @@ class Router:
   def handle_packet(self, srcif, packet):
     """ dispatches a packet """
     type = packet['type']
-
-    print("This is the message type: " + type)
-
     if type == DATA:
+      print("Starting Forward")
       return self.forward(srcif, packet)
-    elif type == "update":
-      print("We are here")
+    elif type == UPDT:
+      print("Starting Update")
       return self.update(srcif, packet)
     elif type == RVKE:
+      print("Starting Revoke")
       return self.revoke(packet)
     elif type == DUMP:
+      print("Starting Dump")
       return self.dump(packet)
     elif type == NRTE:
       return self.send_error(packet['src'], packet['msg'])

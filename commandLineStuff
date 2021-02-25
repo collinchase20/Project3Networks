@@ -1,3 +1,15 @@
 ./sim -h
 
 ./sim --test_dir ./tests --router ./router milestone
+
+
+Type: update
+Src:192.168.0.2
+Dst:192.168.0.1
+Msg:{"network": "192.168.0.0", "netmask": "255.255.255.0", "localpref": 100, "ASPath": [1], "origin": "EGP", "selfOrigin": true}
+
+
+
+This is one of the networks: 192.168.0.2-cust
+This is one of the networks: 172.168.0.2-cust
+This is the asn: 14
