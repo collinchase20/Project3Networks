@@ -99,6 +99,8 @@ class Router:
     # TODO
     peer = None
     routes = self.lookup_routes(daddr)
+    for val in routes:
+      print("This is a route: " + val)
     # Rules go here
     if routes:
       # 1. Highest Preference
