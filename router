@@ -44,6 +44,7 @@ class Router:
     self.relations = {}
     self.sockets = {}
     self.asn = asn
+    self.forwardTable = {}
     for relationship in networks:
       network, relation = relationship.split("-")
       self.sockets[network] = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
@@ -54,6 +55,7 @@ class Router:
   def lookup_routes(self, daddr):
     """ Lookup all valid routes for an address """
     # TODO
+    print("This is the address: " + daddr)
     outroutes = []
     return outroutes
 
@@ -132,7 +134,14 @@ class Router:
 
   def update(self, srcif, packet):
     """ handle update packets """
-    # TODO 
+    # TODO
+    message = packet["msg"]
+    self.forwardTable[NTWK] = message[NTWK]
+    self.forwardTable[NMSK] = message[NMSK]
+    self.forwardTable[LPRF] = message[LPRF]
+    self.forwardTable[APTH] = message[APTH]
+    self.forwardTable[ORIG] = message[ORIG]
+    self.forwardTable[SORG] = message[SORG]
     return False
 
   def revoke(self, packet):
@@ -153,12 +162,20 @@ class Router:
       return self.forward(srcif, packet)
     elif type == UPDT:
       return self.update(srcif, packet)
+    elif type == RVKE:
+      return self.revoke(packet)
+    elif type == DUMP:
+      return self.dump(packet)
+    elif type == NRTE:
+      return self.send_error(packet['src'], packet['msg'])
     else:
-      return Exception ("Unknown Packet Type: " + type)
+      print ("Unknown Packet Type: " + type)
+      return
 
   def send_error(self, conn, msg):
     """ Send a no_route error message """
     # TODO
+    print("Message type was No Route")
     return
 
   def run(self):
