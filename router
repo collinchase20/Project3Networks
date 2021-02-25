@@ -176,6 +176,7 @@ if __name__ == "__main__":
   PARSER.add_argument('networks', metavar='networks', type=str, nargs='+', help="networks")
   PARSER.add_argument('asn')
   ARGS = PARSER.parse_args()
-  print("This is the network: " + ARGS.networks)
-  print("This is the asn: " + ARGS.asn)
+  for val in ARGS.networks:
+    print("This is one of the networks: " + val)
+  print("This is the asn: " + str(ARGS.asn))
   Router(ARGS.networks, ARGS.asn).run()
