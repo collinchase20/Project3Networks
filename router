@@ -63,6 +63,7 @@ class Router:
         outroutes.append(packet[PEER])
     return outroutes
 
+
   def get_shortest_as_path(self, routes):
     """ select the route with the shortest AS Path """
     # TODO
@@ -110,6 +111,9 @@ class Router:
       lowestRoutes.append(min(route))
     return lowestRoutes
 
+  def get_cidr_from_netmask(self, netmask):
+    return (sum([bin(int(bits)).count("1") for bits in netmask.split(".")]))
+
 
   def get_route(self, srcif, daddr):
     """ Select the best route for a given address """
@@ -152,9 +156,11 @@ class Router:
     """ handle update packets """
     # TODO
     #Map our update message, Source mapped to the Message
+    #1.) Save a copy of the announcement incase we need it later
     self.updates[packet['src']] = packet
 
     #Update the Forwarding Table
+    #2.) Add an entry to our forwarding table
     message = packet["msg"]
     tempDictionary = {}
     tempDictionary[NTWK] = message[NTWK]
@@ -166,6 +172,7 @@ class Router:
     tempDictionary[PEER] = packet['src']
     self.forwardTable.append(tempDictionary)
 
+    #3.)Potentially send copies of the announcement to neighboring routers
     #Old destination is our new source,
     #And the socket becomes our new destination
     for s in self.sockets:
