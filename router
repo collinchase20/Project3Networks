@@ -173,8 +173,8 @@ class Router:
 
 if __name__ == "__main__":
   PARSER = argparse.ArgumentParser(description='route packets')
-  PARSER.add_argument('networks', metavar='networks', type=str, nargs='+', help="networks")
   PARSER.add_argument('asn')
+  PARSER.add_argument('networks', metavar='networks', type=str, nargs='+', help="networks")
   ARGS = PARSER.parse_args()
   for val in ARGS.networks:
     print("This is one of the networks: " + val)
