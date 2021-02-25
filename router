@@ -142,7 +142,9 @@ class Router:
   def forward(self, srcif, packet):
     """ Forward a data packet """
     # TODO
-    destination = packet['dst']
+    #Forwarding to the destination specified in the packet
+    destination = packet[DEST]
+    #Get the route for destination
     route = self.get_route(srcif, destination)
     route.sendall(json.dumps(packet))
     return True
@@ -169,17 +171,21 @@ class Router:
     tempDictionary[APTH] = message[APTH]
     tempDictionary[ORIG] = message[ORIG]
     tempDictionary[SORG] = message[SORG]
-    tempDictionary[PEER] = packet['src']
+    tempDictionary[PEER] = packet[SRCE]
     self.forwardTable.append(tempDictionary)
 
     #3.)Potentially send copies of the announcement to neighboring routers
-    #Old destination is our new source,
-    #And the socket becomes our new destination
     for s in self.sockets:
-      copiedPacket = copy.deepcopy(packet)
-      copiedPacket[SRCE] = copiedPacket[DEST]
-      copiedPacket[DEST] = s
-      self.forward(s, copiedPacket)
+      #dont send to itself
+      if s == packet[SRCE]:
+        continue
+      else:
+        copiedPacket = copy.deepcopy(packet)
+        # Old destination is our new source
+        copiedPacket[SRCE] = copiedPacket[DEST]
+        # And the socket becomes our new destination
+        copiedPacket[DEST] = s
+        self.forward(s, copiedPacket)
 
     return True
 
