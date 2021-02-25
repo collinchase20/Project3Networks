@@ -110,7 +110,10 @@ class Router:
   def forward(self, srcif, packet):
     """ Forward a data packet """
     # TODO
-    return False
+    destination = packet['dst']
+    route = self.get_route(srcif, destination)
+    route.sendall(json.dumps(packet))
+    return True
 
   def coalesce(self):
     """ coalesce any routes that are right next to each other """
@@ -134,8 +137,14 @@ class Router:
 
   def handle_packet(self, srcif, packet):
     """ dispatches a packet """
+    type = packet['type']
 
-    return False
+    if type == DATA:
+      return self.forward(srcif, packet)
+    elif type == UPDT:
+      return self.update(srcif, packet)
+    else:
+      return Exception ("Unknown Packet Type: " + type)
 
   def send_error(self, conn, msg):
     """ Send a no_route error message """
