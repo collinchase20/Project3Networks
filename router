@@ -158,6 +158,8 @@ class Router:
     """ dispatches a packet """
     type = packet['type']
 
+    print("This is the message type: " + type)
+
     if type == DATA:
       return self.forward(srcif, packet)
     elif type == UPDT:
