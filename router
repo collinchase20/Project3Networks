@@ -158,10 +158,10 @@ class Router:
               srcif = sock
           msg = json.loads(k)
           print ("---------------------------")
-          print "Type: " + msg['type']
-          print "Src:" + msg['src']
-          print "Dst:" + msg['dst']
-          print "Msg:" + json.dumps(msg['msg'])
+          print ("Type: " + msg['type'])
+          print ("Src:" + msg['src'])
+          print ("Dst:" + msg['dst'])
+          print ("Msg:" + json.dumps(msg['msg']))
           print ("---------------------------")
           if not self.handle_packet(srcif, msg):
             self.send_error(conn, msg)
