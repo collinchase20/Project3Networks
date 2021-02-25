@@ -162,7 +162,8 @@ class Router:
 
     if type == DATA:
       return self.forward(srcif, packet)
-    elif type == UPDT:
+    elif type == "update":
+      print("We are here")
       return self.update(srcif, packet)
     elif type == RVKE:
       return self.revoke(packet)
