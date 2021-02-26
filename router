@@ -184,6 +184,8 @@ class Router:
     packet['srcif'] = srcif
     #self.updates[srcif] = packet
 
+    copiedPacket = packet
+
     #3.)Potentially send copies of the announcement to neighboring routers
     for s in self.sockets:
       #dont send to itself
@@ -191,7 +193,7 @@ class Router:
         print("We are not sending to itself: " + str(s) + " " + str(srcif))
         continue
       else:
-        copiedPacket = copy.deepcopy(packet)
+        #copiedPacket = copy.deepcopy(packet)
         # Old destination is our new source
         copiedPacket[SRCE] = copiedPacket[DEST]
         # And the socket becomes our new destination
