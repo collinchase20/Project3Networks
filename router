@@ -125,19 +125,19 @@ class Router:
     print("THESE ARE THE ROUTES AFTER GET VALID ROUTES: " + str(routes))
 
     # Rules go here
-    if routes:
+    #if routes:
       # 1. Highest Preference
-      routes = self.get_highest_preference(routes)
+      #routes = self.get_highest_preference(routes)
       # 2. Self Origin
-      routes = self.get_self_origin(routes)
+      #routes = self.get_self_origin(routes)
       # 3. Shortest ASPath
-      routes = self.get_shortest_as_path(routes)
+      #routes = self.get_shortest_as_path(routes)
       # 4. EGP > IGP > UNK
-      routes = self.get_origin_routes(routes)
+      #routes = self.get_origin_routes(routes)
       # 5. Lowest IP Address
-      routes = self.get_lowest_address(routes)
+      #routes = self.get_lowest_address(routes)
       # Final check: enforce peering relationships
-      routes = self.filter_relationships(srcif, routes)
+      #routes = self.filter_relationships(srcif, routes)
     return self.sockets[peer] if peer else None
 
   def forward(self, srcif, packet, route=None):
