@@ -193,8 +193,7 @@ class Router:
       else:
         copiedPacket = copy.deepcopy(packet)
         # Old destination is our new source
-        #copiedPacket[SRCE] = copiedPacket[DEST]
-        copiedPacket[SRCE] = ('.').join(s.split('.', 3)[:3]) + '.1'
+        copiedPacket[SRCE] = copiedPacket[DEST]
         # And the socket becomes our new destination
         copiedPacket[DEST] = s
         copiedPacket[MESG][APTH] = [int(self.asn)]
