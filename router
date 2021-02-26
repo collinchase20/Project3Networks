@@ -243,15 +243,17 @@ class Router:
       print ("Unknown Packet Type: " + type)
       raise Exception("Unknown Packet Type " + type)
 
-  def send_error(self, srcif, msg):
+  def send_error(self, conn, msg, srcif):
     """ Send a no_route error message """
-    print("Sending an Error for No Route")
-    tempDict = {}
-    tempDict[SRCE] = srcif.replace('.2', '.1')
-    tempDict[DEST] = msg[SRCE]
-    tempDict[TYPE] = NRTE
-    tempDict[MESG] = {}
-    self.sockets[srcif].sendall(json.dumps(tempDict).encode())
+    print("Got an error when trying to handle the packet")
+    print("Tried to handle this connection " + str(srcif))
+    print("Tried to handle this message " + str(msg))
+    #tempDict = {}
+    #tempDict[SRCE] = srcif.replace('.2', '.1')
+    #tempDict[DEST] = msg[SRCE]
+    #tempDict[TYPE] = NRTE
+    #tempDict[MESG] = {}
+    #self.sockets[srcif].sendall(json.dumps(tempDict).encode())
     return
 
   def run(self):
@@ -276,7 +278,7 @@ class Router:
           print ("Message: " + json.dumps(msg['msg']))
           print ("---------------------------")
           if not self.handle_packet(srcif, msg):
-            self.send_error(srcif, msg)
+            self.send_error(conn, msg, srcif)
         else:
           return
 
