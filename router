@@ -3,7 +3,6 @@ import argparse
 import json
 import select
 import socket
-import copy
 
 ##########################################################################################
 
@@ -121,9 +120,7 @@ class Router:
     print("Starting get_route")
     peer = None
     routes = self.lookup_routes(daddr)
-
     print("THESE ARE THE ROUTES AFTER GET VALID ROUTES: " + str(routes))
-
     # Rules go here
     #if routes:
       # 1. Highest Preference
@@ -158,27 +155,24 @@ class Router:
     return False
 
 
-  def send_update(self, srcif, copiedPacket):
-    # Make a copy of the Update Message
-    #copiedPacket = copy.deepcopy(packet)
+  def send_update(self, srcif, packet):
     #Set the new source
-    copiedPacket[SRCE] = srcif.replace('.2', '.1')
+    packet[SRCE] = srcif.replace('.2', '.1')
     #And the socket becomes our new destination
-    copiedPacket[DEST] = srcif
+    packet[DEST] = srcif
     # Update the ASN
-    copiedPacket[MESG][APTH].append(int(self.asn))
-    print("SENDING THE FOLLOWING UPDATE MESSAGE: " + str(copiedPacket))
-    self.sockets[srcif].sendall(json.dumps(copiedPacket).encode())
+    packet[MESG][APTH].append(int(self.asn))
+    print("SENDING THE FOLLOWING UPDATE MESSAGE: " + str(packet))
+    #Send the update message
+    self.sockets[srcif].sendall(json.dumps(packet).encode())
 
 
   def update(self, srcif, packet):
     """ handle update packets """
-
     print("Sending Update From This Socket: " + str(srcif))
     #Map our update message, Source mapped to the Message
     #1.) Save a copy of the announcement incase we need it later
     self.updates[packet[SRCE]] = packet
-
     #Update the Forwarding Table
     #2.) Add an entry to our forwarding table
     message = packet[MESG]
@@ -191,19 +185,16 @@ class Router:
     tempDictionary[SORG] = message[SORG]
     tempDictionary[PEER] = packet[SRCE]
     self.forwardTable.append(tempDictionary)
-
     print("UPDATED THE FORWARDING TABLE TO THE FOLLOWING: " + str(self.forwardTable))
-
     #Add to our updates which socket sent which update packet
     packet['srcif'] = srcif
-
     #Get the relation of the current socket connection
     relation = self.relations[srcif]
-
     #3.)Potentially send copies of the announcement to neighboring routers
     for s in self.sockets:
       # Update is recieved from a customer so we send the updates to all of the neighbors not including itself
       if relation == CUST:
+        #Make sure we do not send the update to ourself
         if s == srcif:
           print("We are not sending to itself: " + str(s) + " " + str(srcif))
           continue
@@ -213,7 +204,6 @@ class Router:
       elif relation == PEER or relation == PROV:
         if self.relations[s] == CUST:
           self.send_update(s, packet)
-
     return True
 
   def revoke(self, packet):
@@ -258,7 +248,7 @@ class Router:
   def send_error(self, conn, msg):
     """ Send a no_route error message """
     # TODO
-    print("Message type was No Route")
+    print("Message type was No Route: " + str(conn) + " " + str(msg))
     return
 
   def run(self):
@@ -278,9 +268,9 @@ class Router:
           msg = json.loads(k)
           print ("---------------------------")
           print ("Type: " + msg['type'])
-          print ("Src:" + msg['src'])
-          print ("Dst:" + msg['dst'])
-          print ("Msg:" + json.dumps(msg['msg']))
+          print ("Source: " + msg['src'])
+          print ("Destination: " + msg['dst'])
+          print ("Message: " + json.dumps(msg['msg']))
           print ("---------------------------")
           if not self.handle_packet(srcif, msg):
             self.send_error(conn, msg)
