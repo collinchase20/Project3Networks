@@ -158,9 +158,9 @@ class Router:
     return False
 
 
-  def send_update(self, srcif, packet):
+  def send_update(self, srcif, copiedPacket):
     # Make a copy of the Update Message
-    copiedPacket = copy.deepcopy(packet)
+    #copiedPacket = copy.deepcopy(packet)
     #Set the new source
     copiedPacket[SRCE] = srcif.replace('.2', '.1')
     #And the socket becomes our new destination
