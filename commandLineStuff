@@ -13,3 +13,6 @@ IGP > EGP > UNK
 This is one of the networks: 192.168.0.2-cust
 This is one of the networks: 172.168.0.2-cust
 This is the asn: 14
+
+
+ASN 2 -> 14 -> 1

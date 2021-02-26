@@ -3,7 +3,6 @@ import argparse
 import json
 import select
 import socket
-import copy
 
 ##########################################################################################
 
@@ -184,8 +183,6 @@ class Router:
     packet['srcif'] = srcif
     #self.updates[srcif] = packet
 
-    copiedPacket = packet
-
     #3.)Potentially send copies of the announcement to neighboring routers
     for s in self.sockets:
       #dont send to itself
@@ -193,12 +190,14 @@ class Router:
         print("We are not sending to itself: " + str(s) + " " + str(srcif))
         continue
       else:
-        #copiedPacket = copy.deepcopy(packet)
+        #Make a copy of the Update Message
+        copiedPacket = packet
         # Old destination is our new source
         copiedPacket[SRCE] = copiedPacket[DEST]
         # And the socket becomes our new destination
         copiedPacket[DEST] = s
-        copiedPacket[MESG][APTH] = [int(self.asn)]
+        #Update the ASN
+        copiedPacket[MESG][APTH].append(int(self.asn))
         print("SENDING THE FOLLOWING UPDATE MESSAGE: " + str(copiedPacket))
         self.sockets[s].sendall(json.dumps(copiedPacket).encode())
     return True
