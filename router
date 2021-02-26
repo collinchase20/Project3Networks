@@ -61,7 +61,8 @@ class Router:
     outroutes = []
     for packet in self.forwardTable:
       if packet["network"].split(".")[0] == daddr.split(".")[0]:
-        outroutes.append(packet[PEER])
+        if packet["network"].split(".")[1] == daddr.split(".")[1]:
+          outroutes.append(packet[PEER])
     return outroutes
 
 
