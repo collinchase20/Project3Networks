@@ -239,16 +239,19 @@ class Router:
       return self.dump(packet)
     elif type == "wait":
       pass
-    elif type == NRTE:
-      return self.send_error(packet['src'], packet['msg'])
     else:
       print ("Unknown Packet Type: " + type)
-      return
+      raise Exception("Unknown Packet Type " + type)
 
-  def send_error(self, conn, msg):
+  def send_error(self, srcif, msg):
     """ Send a no_route error message """
-    # TODO
-    print("Message type was No Route: " + str(conn) + " " + str(msg))
+    print("Sending an Error for No Route")
+    tempDict = {}
+    tempDict[SRCE] = srcif.replace('.2', '.1')
+    tempDict[DEST] = msg[SRCE]
+    tempDict[TYPE] = NRTE
+    tempDict[MESG] = {}
+    self.sockets[srcif].sendall(json.dumps(tempDict).encode())
     return
 
   def run(self):
@@ -273,7 +276,7 @@ class Router:
           print ("Message: " + json.dumps(msg['msg']))
           print ("---------------------------")
           if not self.handle_packet(srcif, msg):
-            self.send_error(conn, msg)
+            self.send_error(srcif, msg)
         else:
           return
 
