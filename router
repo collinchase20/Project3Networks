@@ -161,11 +161,11 @@ class Router:
     """ handle update packets """
     #Map our update message, Source mapped to the Message
     #1.) Save a copy of the announcement incase we need it later
-    self.updates[packet['src']] = packet
+    self.updates[packet[SRCE]] = packet
 
     #Update the Forwarding Table
     #2.) Add an entry to our forwarding table
-    message = packet["msg"]
+    message = packet[MESG]
     tempDictionary = {}
     tempDictionary[NTWK] = message[NTWK]
     tempDictionary[NMSK] = message[NMSK]
@@ -185,7 +185,7 @@ class Router:
     #3.)Potentially send copies of the announcement to neighboring routers
     for s in self.sockets:
       #dont send to itself
-      if s == packet[SRCE]:
+      if s == srcif:
         print("We are not sending to itself")
         continue
       else:
