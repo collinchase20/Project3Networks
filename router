@@ -192,11 +192,11 @@ class Router:
       else:
         copiedPacket = copy.deepcopy(packet)
         # Old destination is our new source
-        print("This is the new source: " + copiedPacket[DEST])
         copiedPacket[SRCE] = copiedPacket[DEST]
         # And the socket becomes our new destination
         copiedPacket[DEST] = s
         copiedPacket[MESG][APTH] = [int(self.asn)]
+        print("SENDING THE FOLLOWING UPDATE MESSAGE: " + copiedPacket)
         self.sockets[s].sendall(json.dumps(copiedPacket).encode())
     return True
 
