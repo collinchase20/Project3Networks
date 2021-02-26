@@ -16,3 +16,11 @@ This is the asn: 14
 
 
 ASN 2 -> 14 -> 1
+
+
+
+We are not sending to itself: 172.168.0.2 172.168.0.2
+	Error: got an unexpected message on interface 192.168.0.2
+	Got: {'type': 'update', 'src': '192.168.0.1', 'dst': '192.168.0.2', 'msg': {'network': '172.168.0.0', 'netmask': '255.255.0.0', 'localpref': 100, 'ASPath': [1, 14], 'origin': 'EGP', 'selfOrigin': True}}
+	Error: got an unexpected message on interface 172.168.0.2
+	Got: {'type': 'update', 'src': '172.168.0.1', 'dst': '172.168.0.2', 'msg': {'network': '192.168.0.0', 'netmask': '255.255.255.0', 'localpref': 100, 'ASPath': [2, 14], 'origin': 'EGP', 'selfOrigin': True}}
