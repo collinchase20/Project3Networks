@@ -3,6 +3,7 @@ import argparse
 import json
 import select
 import socket
+import copy
 
 ##########################################################################################
 
@@ -191,7 +192,7 @@ class Router:
         continue
       else:
         #Make a copy of the Update Message
-        copiedPacket = fakePacket
+        copiedPacket = copy.deepcopy(packet)
         # Old destination is our new source
         copiedPacket[SRCE] = copiedPacket[DEST]
         # And the socket becomes our new destination
