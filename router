@@ -55,6 +55,8 @@ class Router:
   def lookup_routes(self, daddr):
     """ Lookup all valid routes for an address """
     # TODO
+    #At the bare minimum every IP address has a netmask of at least 255. whatever
+    #so if the first segment of the IP addresses match they are on the same network
     print("Starting to lookup routes for this address: " + daddr)
     outroutes = []
     for packet in self.forwardTable:
@@ -141,10 +143,8 @@ class Router:
     """ Forward a data packet """
     #Handling a DATA message
     if route != None:
-      try:
-        route.sendall(json.dumps(packet).encode())
-      except:
-        print("The route might be invalid, this is the route: " + str(route))
+      route.sendall(json.dumps(packet).encode())
+      return True
     #Handling a DUMP Message
     else:
       self.sockets[srcif].sendall(json.dumps(packet).encode())
