@@ -161,10 +161,9 @@ class Router:
   def send_update(self, srcif, packet):
     # Make a copy of the Update Message
     copiedPacket = copy.deepcopy(packet)
-    # Old destination is our new source
-    #copiedPacket[SRCE] = copiedPacket[DEST]
+    #Set the new source
     copiedPacket[SRCE] = srcif.replace('.2', '.1')
-    # And the socket becomes our new destination
+    #And the socket becomes our new destination
     copiedPacket[DEST] = srcif
     # Update the ASN
     copiedPacket[MESG][APTH].append(int(self.asn))
@@ -248,6 +247,8 @@ class Router:
     elif type == DUMP:
       print("Starting Dump")
       return self.dump(packet)
+    elif type == "wait":
+      pass
     elif type == NRTE:
       return self.send_error(packet['src'], packet['msg'])
     else:
