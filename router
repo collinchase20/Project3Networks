@@ -180,13 +180,14 @@ class Router:
     print(self.forwardTable)
 
     #Add to our updates which socket sent which update packet
+    packet['srcif'] = srcif
     self.updates[srcif] = packet
 
     #3.)Potentially send copies of the announcement to neighboring routers
     for s in self.sockets:
       #dont send to itself
       if s == srcif:
-        print("We are not sending to itself")
+        print("We are not sending to itself: " + str(s) + " " + str(srcif))
         continue
       else:
         copiedPacket = copy.deepcopy(packet)
