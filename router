@@ -182,7 +182,7 @@ class Router:
     #Add to our updates which socket sent which update packet
     packet['srcif'] = srcif
     #self.updates[srcif] = packet
-    copiedPacket = packet
+    fakePacket = packet
     #3.)Potentially send copies of the announcement to neighboring routers
     for s in self.sockets:
       #dont send to itself
@@ -191,7 +191,7 @@ class Router:
         continue
       else:
         #Make a copy of the Update Message
-        #copiedPacket = packet
+        copiedPacket = fakePacket
         # Old destination is our new source
         copiedPacket[SRCE] = copiedPacket[DEST]
         # And the socket becomes our new destination
