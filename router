@@ -196,7 +196,7 @@ class Router:
         # And the socket becomes our new destination
         copiedPacket[DEST] = s
         copiedPacket[MESG][APTH] = [int(self.asn)]
-        print("SENDING THE FOLLOWING UPDATE MESSAGE: " + copiedPacket)
+        print("SENDING THE FOLLOWING UPDATE MESSAGE: " + str(copiedPacket))
         self.sockets[s].sendall(json.dumps(copiedPacket).encode())
     return True
 
