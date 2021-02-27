@@ -134,7 +134,7 @@ class Router:
       #routes = self.filter_relationships(srcif, routes)
 
     if routes != None:
-      peer = routes[1]
+      peer = routes[0]
     return self.sockets[peer] if peer else None
 
   def forward(self, srcif, packet, route=None):
