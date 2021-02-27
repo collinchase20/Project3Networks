@@ -3,6 +3,7 @@ import argparse
 import json
 import select
 import socket
+import copy
 
 ##########################################################################################
 
@@ -153,7 +154,8 @@ class Router:
     return False
 
 
-  def send_update(self, srcif, packet):
+  def send_update(self, srcif, fpacket):
+    packet = copy.deepcopy(fpacket)
     #Set the new source
     packet[SRCE] = srcif.replace('.2', '.1')
     #And the socket becomes our new destination
@@ -167,7 +169,7 @@ class Router:
 
   def update(self, srcif, packet):
     """ handle update packets """
-    print("Sending Update From This Socket: " + str(srcif))
+    print("Sending Update From This Source Interface Socket: " + str(srcif))
     #Map our update message, Source mapped to the Message
     #1.) Save a copy of the announcement incase we need it later
     self.updates[packet[SRCE]] = packet
