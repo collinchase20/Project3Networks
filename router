@@ -55,7 +55,6 @@ class Router:
 
   def lookup_routes(self, daddr):
     """ Lookup all valid routes for an address """
-    # TODO
     #At the bare minimum every IP address has a netmask of at least 255.0.0.0
     #so if the first segment of the IP addresses match they are on the same network
     print("Starting to lookup routes for this address: " + daddr)
@@ -133,7 +132,6 @@ class Router:
       #routes = self.get_lowest_address(routes)
       # Final check: enforce peering relationships
       #routes = self.filter_relationships(srcif, routes)
-
     if routes != None:
       peer = routes[0]
     return self.sockets[peer] if peer else None
@@ -155,16 +153,10 @@ class Router:
 
 
   def send_update(self, srcif, packet):
-    #packet = copy.deepcopy(fpacket)
-    updatePacket = {}
+    updatePacket = copy.deepcopy(packet)
     updatePacket[SRCE] = srcif.replace('.2', '.1')
     updatePacket[DEST] = srcif
-    updatePacket[TYPE] = UPDT
-
-    message = packet[MESG]
-    message[APTH].append(int(self.asn))
-
-    updatePacket[MESG] = message
+    updatePacket[MESG][APTH].append(int(self.asn))
     #Set the new source
     #packet[SRCE] = srcif.replace('.2', '.1')
     #And the socket becomes our new destination
