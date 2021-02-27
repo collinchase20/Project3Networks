@@ -155,7 +155,8 @@ class Router:
 
   def send_update(self, srcif, packet):
     #Set the new source
-    packet[SRCE] = srcif.replace('.2', '.1')
+    #packet[SRCE] = srcif.replace('.2', '.1')
+    packet[SRCE] = packet[DEST]
     #And the socket becomes our new destination
     packet[DEST] = srcif
     # Update the ASN
