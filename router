@@ -60,8 +60,11 @@ class Router:
     print("Starting to lookup routes for this address: " + daddr)
     outroutes = []
     for packet in self.forwardTable:
+      #Check the first part of IP addresses
       if packet["network"].split(".")[0] == daddr.split(".")[0]:
+        #Check the second part of the netmask
         if packet["netmask"].split(".")[1] == '255':
+          #IF the second part of the netmask is 255 then the second part of the IP addresses need to match
           if packet['network'].split('.')[1] == daddr.split(".")[1]:
             outroutes.append(packet[PEER])
         else:
@@ -129,6 +132,9 @@ class Router:
       #routes = self.get_lowest_address(routes)
       # Final check: enforce peering relationships
       #routes = self.filter_relationships(srcif, routes)
+
+    if routes != None:
+      peer = routes[1]
     return self.sockets[peer] if peer else None
 
   def forward(self, srcif, packet, route=None):
