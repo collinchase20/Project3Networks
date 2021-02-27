@@ -154,17 +154,27 @@ class Router:
     return False
 
 
-  def send_update(self, srcif, fpacket):
-    packet = copy.deepcopy(fpacket)
+  def send_update(self, srcif, packet):
+    #packet = copy.deepcopy(fpacket)
+    updatePacket = {}
+    updatePacket[SRCE] = srcif.replace('.2', '.1')
+    updatePacket[DEST] = srcif
+    updatePacket[TYPE] = UPDT
+
+    message = packet[MESG]
+    message[APTH].append(int(self.asn))
+
+    updatePacket[MESG] = message
     #Set the new source
-    packet[SRCE] = srcif.replace('.2', '.1')
+    #packet[SRCE] = srcif.replace('.2', '.1')
     #And the socket becomes our new destination
-    packet[DEST] = srcif
+    #packet[DEST] = srcif
     # Update the ASN
-    packet[MESG][APTH].append(int(self.asn))
+    #packet[MESG][APTH].append(int(self.asn))
     print("SENDING THE FOLLOWING UPDATE MESSAGE: " + str(packet))
     #Send the update message
-    self.sockets[srcif].sendall(json.dumps(packet).encode())
+
+    self.sockets[srcif].sendall(json.dumps(updatePacket).encode())
 
 
   def update(self, srcif, packet):
