@@ -239,7 +239,7 @@ class Router:
     tempDictionary2[SORG] = message[SORG]
 
 
-    if self.FT2.has_key(packet[SRCE]):
+    if packet[SRCE] in self.FT2:
       self.FT2[packet[SRCE]].append([tempDictionary2])
     else:
       self.FT2[packet[SRCE]] = [tempDictionary2]
