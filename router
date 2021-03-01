@@ -105,6 +105,7 @@ class Router:
     if len(routes) == 1:
       return routes
     else:
+      print("DOING GET HIGHEST PREFERENCE THESE ROUTES: " + str(routes))
       outroutes = []
       highestLP = 0
       for route in routes:
@@ -123,6 +124,7 @@ class Router:
     if len(routes) == 1:
       return routes
     else:
+      print("DOING GET SELF ORIGIN THESE ROUTES: " + str(routes))
       outroutes = []
       for route in routes:
         for key in self.forwardTable:
@@ -161,7 +163,7 @@ class Router:
     print("Starting get_route")
     peer = None
     routes = self.lookup_routes(daddr)
-    print("THESE ARE THE ROUTES AFTER GET VALID ROUTES: " + str(routes))
+    print("THESE ARE THE ROUTES AFTER LOOKING UP ROUTES: " + str(routes))
     # Rules go here
     if routes:
       # 1. Highest Preference
@@ -176,6 +178,7 @@ class Router:
       #routes = self.get_lowest_address(routes)
       # Final check: enforce peering relationships
       #routes = self.filter_relationships(srcif, routes)
+    print("THESE ARE THE ROUTES AFTER THE FILTERS BEFORE SELECTING THE FIRST: " + str(routes))
     if routes:
       peer = routes[0]
     return self.sockets[peer] if peer else None
