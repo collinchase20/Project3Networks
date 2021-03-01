@@ -80,6 +80,7 @@ class Router:
     if len(routes) == 1:
       return routes
     else:
+      print("DOING GET SHORTEST AS PATH FOR THESE ROUTES: " + str(routes))
       outroutes = []
       smallestRoute = 10000000
       for route in routes:
