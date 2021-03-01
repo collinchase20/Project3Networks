@@ -45,8 +45,7 @@ class Router:
     self.relations = {}      #{192.168.0.2 : cust}
     self.sockets = {}        #{192.168.0.2 : socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)}
     self.asn = asn
-    self.forwardTable = []
-    self.FT2 = {}
+    self.forwardTable = {}
     for relationship in networks:
       network, relation = relationship.split("-")
       self.sockets[network] = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
@@ -54,33 +53,15 @@ class Router:
       self.sockets[network].connect(network)
       self.relations[network] = relation
 
+
   def lookup_routes(self, daddr):
     """ Lookup all valid routes for an address """
     #At the bare minimum every IP address has a netmask of at least 255.0.0.0
     #so if the first segment of the IP addresses match they are on the same network
     print("Starting to lookup routes for this address: " + daddr)
     outroutes = []
-    for packet in self.forwardTable:
-      #Check the first part of IP addresses
-      if packet["network"].split(".")[0] == daddr.split(".")[0]:
-        #Check the second part of the netmask
-        if packet["netmask"].split(".")[1] == '255':
-          #IF the second part of the netmask is 255 then the second part of the IP addresses need to match
-          if packet['network'].split('.')[1] == daddr.split(".")[1]:
-            outroutes.append(packet[PEER])
-        #Second part of the nermask was 0, so only the first part of the IP addrssses need to match
-        else:
-          outroutes.append(packet[PEER])
-    return outroutes
-
-  def lookup_routes2(self, daddr):
-    """ Lookup all valid routes for an address """
-    #At the bare minimum every IP address has a netmask of at least 255.0.0.0
-    #so if the first segment of the IP addresses match they are on the same network
-    print("Starting to lookup routes for this address: " + daddr)
-    outroutes = []
-    for key in self.FT2:
-      for packet in self.FT2[key]:
+    for key in self.forwardTable:
+      for packet in self.forwardTable[key]:
         # Check the first part of IP addresses
         if packet["network"].split(".")[0] == daddr.split(".")[0]:
           # Check the second part of the netmask
@@ -108,6 +89,7 @@ class Router:
 
     return outroutes
 
+
   def get_highest_preference(self, routes):
     """ select the route with the highest Local Preference. Select routes with a higher number for this value """
     #This is the route with the highest local preference value
@@ -118,29 +100,14 @@ class Router:
       outroutes = []
       highestLP = 0
       for route in routes:
-        for packet in self.forwardTable:
-          if packet[PEER] == route:
-            if packet[LPRF] > highestLP:
-              outroutes = [route]
-      return outroutes
-
-  def get_highest_preference2(self, routes):
-    """ select the route with the highest Local Preference. Select routes with a higher number for this value """
-    #This is the route with the highest local preference value
-    # TODO
-    if len(routes) == 1:
-      return routes
-    else:
-      outroutes = []
-      highestLP = 0
-      for route in routes:
-        for key in self.FT2:
+        for key in self.forwardTable:
           if key == route:
-            for packet in self.FT2[key]:
+            for packet in self.forwardTable[key]:
               if packet[LPRF] > highestLP:
                 highestLP = packet[LPRF]
                 outroutes = [route]
       return outroutes
+
 
   def get_self_origin(self, routes):
     """ select self originating routes. A True value is preferred over a False value """
@@ -150,27 +117,9 @@ class Router:
     else:
       outroutes = []
       for route in routes:
-        for packet in self.forwardTable:
-          if packet[PEER] == route:
-            if packet[SORG] == True:
-              outroutes.append(route)
-      #Check if none of the routes had a true value
-      if len(outroutes) == 0:
-        return routes
-      else:
-        return outroutes
-
-  def get_self_origin2(self, routes):
-    """ select self originating routes. A True value is preferred over a False value """
-    #These are the routes where "selfOrigin" is true
-    if len(routes) == 1:
-      return routes
-    else:
-      outroutes = []
-      for route in routes:
-        for key in self.FT2:
+        for key in self.forwardTable:
           if key == route:
-            for packet in self.FT2[key]:
+            for packet in self.forwardTable[key]:
               if packet[SORG] == True:
                 outroutes.append(route)
       #Check if none of the routes had a true value
@@ -203,15 +152,14 @@ class Router:
     """ Select the best route for a given address """
     print("Starting get_route")
     peer = None
-    #routes = self.lookup_routes(daddr)
-    routes = self.lookup_routes2(daddr)
+    routes = self.lookup_routes(daddr)
     print("THESE ARE THE ROUTES AFTER GET VALID ROUTES: " + str(routes))
     # Rules go here
     if routes:
       # 1. Highest Preference
-      routes = self.get_highest_preference2(routes)
+      routes = self.get_highest_preference(routes)
       # 2. Self Origin
-      routes = self.get_self_origin2(routes)
+      routes = self.get_self_origin(routes)
       # 3. Shortest ASPath
       #routes = self.get_shortest_as_path(routes)
       # 4. EGP > IGP > UNK
@@ -264,24 +212,12 @@ class Router:
     tempDictionary[APTH] = message[APTH]
     tempDictionary[ORIG] = message[ORIG]
     tempDictionary[SORG] = message[SORG]
-    tempDictionary[PEER] = packet[SRCE]
-    self.forwardTable.append(tempDictionary)
 
-    tempDictionary2 = {}
-    tempDictionary2[NTWK] = message[NTWK]
-    tempDictionary2[NMSK] = message[NMSK]
-    tempDictionary2[LPRF] = message[LPRF]
-    tempDictionary2[APTH] = message[APTH]
-    tempDictionary2[ORIG] = message[ORIG]
-    tempDictionary2[SORG] = message[SORG]
-
-
-    if packet[SRCE] in self.FT2:
-      self.FT2[packet[SRCE]].append(tempDictionary2)
+    #Check if this peer already exists in our forwarding table
+    if packet[SRCE] in self.forwardTable:
+      self.forwardTable[packet[SRCE]].append(tempDictionary)
     else:
-      self.FT2[packet[SRCE]] = [tempDictionary2]
-
-
+      self.forwardTable[packet[SRCE]] = [tempDictionary]
 
     print("UPDATED THE FORWARDING TABLE TO THE FOLLOWING: " + str(self.forwardTable))
     #Add to our updates which socket sent which update packet
