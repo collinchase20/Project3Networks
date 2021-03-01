@@ -138,6 +138,7 @@ class Router:
           if key == route:
             for packet in self.FT2[key]:
               if packet[LPRF] > highestLP:
+                highestLP = packet[LPRF]
                 outroutes = [route]
       return outroutes
 
