@@ -212,6 +212,7 @@ class Router:
     tempDictionary[APTH] = message[APTH]
     tempDictionary[ORIG] = message[ORIG]
     tempDictionary[SORG] = message[SORG]
+    tempDictionary[PEER] = packet[SRCE]
 
     #Check if this peer already exists in our forwarding table
     if packet[SRCE] in self.forwardTable:
@@ -245,13 +246,22 @@ class Router:
     # TODO
     return True
 
+  def build_forward_table(self):
+    table = []
+    for key in self.forwardTable:
+      for packet in self.forwardTable[key]:
+        table.append(packet)
+    return table
+
+
   def dump(self, packet):
     """ handles dump table requests """
     tempDict = {}
     tempDict[SRCE] = packet[DEST]
     tempDict[DEST] = packet[SRCE]
     tempDict[TYPE] = TABL
-    tempDict[MESG] = self.forwardTable
+    #tempDict[MESG] = self.forwardTable
+    tempDict[MESG] = self.build_forward_table()
     self.forward(packet[SRCE], tempDict)
     return True
 
