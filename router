@@ -280,11 +280,20 @@ class Router:
     revokedNetworks = packet[MESG]
 
     #remove reovked packets from our forwarding table
+    #indicesToRemove = []
+    valuesToRemove = []
     for revoke in revokedNetworks:
       for i in range(len(Ftable)):
         if revoke[NTWK] == Ftable[i][NTWK] and revoke[NMSK] == Ftable[i][NMSK]:
+          valuesToRemove.append(Ftable[i])
           #Remove that revoked packet from our forwarding table
-          del Ftable[i]
+          #indicesToRemove.append(i)
+          #del Ftable[i]
+
+    #remove from our forard table
+    for val in valuesToRemove:
+      Ftable.remove(val)
+
 
     # Get the relation of the current socket connection
     relation = self.relations[srcif]
