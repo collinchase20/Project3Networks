@@ -41,6 +41,7 @@ class Router:
   """ Your Router """
   def __init__(self, networks, asn):
     self.routes = {}
+    self.revokes = {}
     self.updates = {}        #{192.168.0.2 : {"network": "192.168.0.0", "netmask": "255.255.255.0", "localpref": 100, "ASPath": [1], "origin": "EGP", "selfOrigin": true}}
     self.relations = {}      #{192.168.0.2 : cust}
     self.sockets = {}        #{192.168.0.2 : socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)}
@@ -259,9 +260,48 @@ class Router:
           self.send_update(s, packet)
     return True
 
-  def revoke(self, packet):
+
+
+
+  def send_revoke(self, srcif, packet):
+    revokePacket = copy.deepcopy(packet)
+    revokePacket[SRCE] = srcif.replace('.2', '.1')
+    revokePacket[DEST] = srcif
+    revokePacket[TYPE] = RVKE
+    print("SENDING THE FOLLOWING REVOKE MESSAGE: " + str(packet))
+    self.sockets[srcif].sendall(json.dumps(revokePacket).encode())
+
+
+  def revoke(self, srcif, packet):
     """ handle revoke packets """
-    # TODO
+    #Save a copy of the revokation message
+    self.revokes[packet[SRCE]] = packet
+    Ftable = self.build_forward_table()
+    revokedNetworks = packet[MESG]
+
+    #remove reovked packets from our forwarding table
+    for revoke in revokedNetworks:
+      for i in range(len(Ftable)):
+        if revoke[NTWK] == Ftable[i][NTWK] and revoke[NMSK] == Ftable[i][NMSK]:
+          #Remove that revoked packet from our forwarding table
+          del Ftable[i]
+
+    # Get the relation of the current socket connection
+    relation = self.relations[srcif]
+    # 3.)Potentially send copies of the announcement to neighboring routers
+    for s in self.sockets:
+      # Update is recieved from a customer so we send the updates to all of the neighbors not including itself
+      if relation == CUST:
+        # Make sure we do not send the update to ourself
+        if s == srcif:
+          print("We are not sending to itself: " + str(s) + " " + str(srcif))
+          continue
+        else:
+          self.send_revoke(s, packet)
+      # Update is recieved from a peer or provider so we are only going to send the updates to your customers
+      elif relation == PEER or relation == PROV:
+        if self.relations[s] == CUST:
+          self.send_revoke(s, packet)
     return True
 
   def build_forward_table(self):
@@ -295,7 +335,7 @@ class Router:
       return self.update(srcif, packet)
     elif type == RVKE:
       print("Starting Revoke")
-      return self.revoke(packet)
+      return self.revoke(srcif, packet)
     elif type == DUMP:
       print("Starting Dump")
       return self.dump(packet)
