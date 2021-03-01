@@ -276,7 +276,7 @@ class Router:
 
 
     if packet[SRCE] in self.FT2:
-      self.FT2[packet[SRCE]].append([tempDictionary2])
+      self.FT2[packet[SRCE]].append(tempDictionary2)
     else:
       self.FT2[packet[SRCE]] = [tempDictionary2]
 
