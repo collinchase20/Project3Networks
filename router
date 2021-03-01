@@ -112,9 +112,13 @@ class Router:
         for key in self.forwardTable:
           if key == route:
             for packet in self.forwardTable[key]:
-              if packet[LPRF] > highestLP:
-                highestLP = packet[LPRF]
-                outroutes = [route]
+              if packet[LPRF] >= highestLP:
+                if route in outroutes:
+                  continue
+                else:
+                  highestLP = packet[LPRF]
+                  outroutes.append(route)
+
       return outroutes
 
 
@@ -131,7 +135,10 @@ class Router:
           if key == route:
             for packet in self.forwardTable[key]:
               if packet[SORG] == True:
-                outroutes.append(route)
+                if route in outroutes:
+                  continue
+                else:
+                  outroutes.append(route)
       #Check if none of the routes had a true value
       if len(outroutes) == 0:
         return routes
