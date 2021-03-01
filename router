@@ -81,12 +81,16 @@ class Router:
       return routes
     else:
       outroutes = []
-      smallestRoute = 0
+      smallestRoute = float("inf")
       for route in routes:
-        for packet in self.forwardTable:
-          if packet[PEER] == route:
-            return False
-
+        for key in self.forwardTable:
+          if key == route:
+            for packet in self.forwardTable[key]:
+              if len(packet[APTH]) < smallestRoute:
+                outroutes = [route]
+                smallestRoute = len(packet[APTH])
+              elif len(packet[APTH]) == smallestRoute:
+                outroutes.append(route)
     return outroutes
 
 
@@ -161,7 +165,7 @@ class Router:
       # 2. Self Origin
       routes = self.get_self_origin(routes)
       # 3. Shortest ASPath
-      #routes = self.get_shortest_as_path(routes)
+      routes = self.get_shortest_as_path(routes)
       # 4. EGP > IGP > UNK
       #routes = self.get_origin_routes(routes)
       # 5. Lowest IP Address
