@@ -80,11 +80,20 @@ class Router:
     return outroutes
 
   def get_highest_preference(self, routes):
-    """ select the route with the shortest AS Path """
+    """ select the route with the highest Local Preference """
     #This is the route with the highest local preference value
     # TODO
-    outroutes = []
-    return outroutes
+    if len(routes) == 1:
+      return routes
+    else:
+      outroutes = []
+      highestLP = 0
+      for route in routes:
+        for packet in self.forwardTable:
+          if packet[SRCE] == route:
+            if packet[LPRF] > highestLP:
+              outroutes = [route]
+      return outroutes
 
   def get_self_origin(self, routes):
     """ select self originating routes """
@@ -115,15 +124,14 @@ class Router:
 
   def get_route(self, srcif, daddr):
     """ Select the best route for a given address """
-    # TODO
     print("Starting get_route")
     peer = None
     routes = self.lookup_routes(daddr)
     print("THESE ARE THE ROUTES AFTER GET VALID ROUTES: " + str(routes))
     # Rules go here
-    #if routes:
+    if routes:
       # 1. Highest Preference
-      #routes = self.get_highest_preference(routes)
+      routes = self.get_highest_preference(routes)
       # 2. Self Origin
       #routes = self.get_self_origin(routes)
       # 3. Shortest ASPath

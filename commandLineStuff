@@ -3,6 +3,33 @@
 ./sim --test_dir ./tests --router ./router milestone
 
 
+
+
+./sim --test_dir ./tests --router ./router ./tests/2-1-loop-select-hpref.conf
+
+./sim --test_dir ./tests --router ./router ./tests/2-2-loop-select-sorg.conf
+
+./sim --test_dir ./tests --router ./router ./tests/2-3-loop-select-aspath.conf
+
+./sim --test_dir ./tests --router ./router ./tests/2-4-loop-select-orig.conf
+
+./sim --test_dir ./tests --router ./router ./tests/2-5-loop-select-ip.conf
+
+./sim --test_dir ./tests --router ./router ./tests/3-1-simple-revoke.conf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Type: update
 Src:192.168.0.2
 Dst:192.168.0.1
