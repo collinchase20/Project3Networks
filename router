@@ -124,6 +124,23 @@ class Router:
               outroutes = [route]
       return outroutes
 
+  def get_highest_preference2(self, routes):
+    """ select the route with the highest Local Preference. Select routes with a higher number for this value """
+    #This is the route with the highest local preference value
+    # TODO
+    if len(routes) == 1:
+      return routes
+    else:
+      outroutes = []
+      highestLP = 0
+      for route in routes:
+        for key in self.FT2:
+          if key == route:
+            for packet in self.FT2[key]:
+              if packet[LPRF] > highestLP:
+                outroutes = [route]
+      return outroutes
+
   def get_self_origin(self, routes):
     """ select self originating routes. A True value is preferred over a False value """
     #These are the routes where "selfOrigin" is true
@@ -136,6 +153,25 @@ class Router:
           if packet[PEER] == route:
             if packet[SORG] == True:
               outroutes.append(route)
+      #Check if none of the routes had a true value
+      if len(outroutes) == 0:
+        return routes
+      else:
+        return outroutes
+
+  def get_self_origin2(self, routes):
+    """ select self originating routes. A True value is preferred over a False value """
+    #These are the routes where "selfOrigin" is true
+    if len(routes) == 1:
+      return routes
+    else:
+      outroutes = []
+      for route in routes:
+        for key in self.FT2:
+          if key == route:
+            for packet in self.FT2[key]:
+              if packet[SORG] == True:
+                outroutes.append(route)
       #Check if none of the routes had a true value
       if len(outroutes) == 0:
         return routes
@@ -170,11 +206,11 @@ class Router:
     routes = self.lookup_routes2(daddr)
     print("THESE ARE THE ROUTES AFTER GET VALID ROUTES: " + str(routes))
     # Rules go here
-    #if routes:
+    if routes:
       # 1. Highest Preference
-      #routes = self.get_highest_preference(routes)
+      routes = self.get_highest_preference2(routes)
       # 2. Self Origin
-      #routes = self.get_self_origin(routes)
+      routes = self.get_self_origin2(routes)
       # 3. Shortest ASPath
       #routes = self.get_shortest_as_path(routes)
       # 4. EGP > IGP > UNK
