@@ -90,7 +90,7 @@ class Router:
       highestLP = 0
       for route in routes:
         for packet in self.forwardTable:
-          if packet[SRCE] == route:
+          if packet[PEER] == route:
             if packet[LPRF] > highestLP:
               outroutes = [route]
       return outroutes
