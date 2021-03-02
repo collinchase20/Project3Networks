@@ -371,6 +371,7 @@ class Router:
           #Remove that revoked packet from our forwarding table
           #indicesToRemove.append(i)
           #del Ftable[i]
+    print("THESE ARE THE VALUES TO REMOVE: " + str(valuesToRemove))
 
     #remove from our forard table
     for val in valuesToRemove:
@@ -406,7 +407,7 @@ class Router:
   def dump(self, packet):
     """ handles dump table requests """
     forwardTable = self.build_forward_table()
-    del forwardTable[1]
+    #del forwardTable[1]
     tempDict = {}
     tempDict[SRCE] = packet[DEST]
     tempDict[DEST] = packet[SRCE]
