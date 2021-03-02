@@ -196,6 +196,7 @@ class Router:
 
   def filter_relationships(self, srcif, routes):
     """ Don't allow Peer->Peer, Peer->Prov, or Prov->Peer forwards """
+    print("DOING GET ORIGIN FOR THESE ROUTES: " + str(routes))
     relation = self.relations[srcif]
     if relation == CUST:
       return routes
@@ -269,6 +270,7 @@ class Router:
     return ip1
 
   def get_lowest_ip(self, ip_list):
+    print("DOING GET ORIGIN FOR THESE ROUTES: " + str(ip_list))
     lowest_ip = None
     if len(ip_list) == 1:
       return ip_list[0]
