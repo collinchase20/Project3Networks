@@ -245,9 +245,9 @@ class Router:
       # 4. EGP > IGP > UNK
       routes = self.get_origin_routes(routes, daddr)
       # 5. Lowest IP Address
-      routes = self.get_lowest_address(routes)
+      routes = self.get_lowest_ip(routes)
       # Final check: enforce peering relationships
-      routes = self.filter_relationships(srcif, routes)
+      #routes = self.filter_relationships(srcif, routes)
     print("THESE ARE THE ROUTES AFTER THE FILTERS BEFORE SELECTING THE FIRST: " + str(routes))
     if routes:
       peer = routes[0]
@@ -274,7 +274,7 @@ class Router:
       return ip_list[0]
     else:
       for i in range(len(ip_list) - 1):
-        lowest_ip = get_lower_ip(ip_list[i], ip_list[i + 1])
+        lowest_ip = self.get_lower_ip(ip_list[i], ip_list[i + 1])
       return lowest_ip
 
 
