@@ -442,6 +442,12 @@ class Router:
     print("Got an error when trying to handle the packet")
     print("Tried to handle this connection " + str(srcif))
     print("Tried to handle this message " + str(msg))
+    tempDict = {}
+    tempDict[SRCE] = srcif.replace('.2', '.1')
+    tempDict[DEST] = msg[SRCE]
+    tempDict[TYPE] = NRTE
+    tempDict[MESG] = {}
+    conn.send(json.dumps(tempDict).encode())
     return
 
   def run(self):
