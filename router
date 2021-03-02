@@ -205,23 +205,9 @@ class Router:
       for route in routes:
         destinationRelationship = self.relations[route]
         #Drop the Data Message
-        if destinationRelationship == PEER:
-          print("This is the PEER route: " + route)
-          return []
-        #Drop the Data Message
-        elif destinationRelationship == PROV:
-          print("This is the PROV route: " + route)
-          return []
-        #Peer -> Cust append it
-        else:
-          print("This is the CUST destination route: " + route)
+        if destinationRelationship == CUST:
           outroutes.append(route)
     return outroutes
-
-    #if len(outroutes) == 0:
-    #  raise Exception("SHOULD NOT BE HERE: " + str(outroutes))
-    #else:
-    #  return outroutes
 
 
   def get_lowest_address(self, routes):
