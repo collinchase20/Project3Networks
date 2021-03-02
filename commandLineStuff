@@ -16,11 +16,6 @@
 
 ./sim --test_dir ./tests --router ./router ./tests/3-2-bad-route.conf
 
-
-
-
-
-
 ./sim --test_dir ./tests --router ./router ./tests/4-1-peering.conf
 
 ./sim --test_dir ./tests --router ./router ./tests/4-2-provider.conf

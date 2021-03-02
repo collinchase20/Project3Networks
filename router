@@ -195,10 +195,40 @@ class Router:
                         UNKRoutes += 1
     return outroutes
 
+  def filter_relationships2(self, srcif, routes):
+    """ Don't allow Peer->Peer, Peer->Prov, or Prov->Peer forwards """
+    print("DOING FILTER RELATIONSHIPS FOR THESE ROUTES: " + str(routes))
+    relation = self.relations[srcif]
+    outroutes = []
+    for route in routes:
+      destinationRelationship = self.relations[route]
+      # Drop the Data Message
+      if destinationRelationship == CUST:
+        outroutes.append(route)
+      elif relation == CUST:
+        outroutes.append(route)
+      else:
+        return []
+    return outroutes
+
   def filter_relationships(self, srcif, routes):
     """ Don't allow Peer->Peer, Peer->Prov, or Prov->Peer forwards """
     print("DOING FILTER RELATIONSHIPS FOR THESE ROUTES: " + str(routes))
     relation = self.relations[srcif]
+    outroutes = []
+    if relation == CUST:
+      return routes
+    else:
+      for route in routes:
+        destinationRelationship = self.relations[route]
+        if destinationRelationship == PEER:
+          continue
+        elif destinationRelationship == PROV:
+          continue
+        else:
+          outroutes.append(route)
+    return outroutes
+
     outroutes = []
     for route in routes:
       destinationRelationship = self.relations[route]
@@ -270,17 +300,15 @@ class Router:
       return lowest_ip
 
 
-  def forward(self, srcif, packet, conn, route=None):
+  def forward(self, srcif, packet, route=None):
     """ Forward a data packet """
     #Handling a DATA message
     if route != None:
       route.sendall(json.dumps(packet).encode())
       return True
-    #Handling a DUMP Message
+    #Send an Error
     else:
-      #self.send_error(conn, packet, srcif)
       return False
-      #self.sockets[srcif].sendall(json.dumps(packet).encode())
 
   def coalesce(self):
     """ coalesce any routes that are right next to each other """
@@ -409,17 +437,16 @@ class Router:
     tempDict[TYPE] = TABL
     tempDict[MESG] = forwardTable
     print("THIS IS THE FORWARDING TABLE IN THE DUMP: " + str(tempDict[MESG]))
-    #self.forward(packet[SRCE], tempDict)
     self.sockets[packet[SRCE]].sendall(json.dumps(tempDict).encode())
     return True
 
-  def handle_packet(self, srcif, packet, conn):
+  def handle_packet(self, srcif, packet):
     """ dispatches a packet """
     type = packet['type']
     if type == DATA:
       print("Starting Forward")
       route = self.get_route(srcif, packet[DEST])
-      return self.forward(srcif, packet, conn, route)
+      return self.forward(srcif, packet, route)
     elif type == UPDT:
       print("Starting Update")
       return self.update(srcif, packet)
@@ -432,14 +459,11 @@ class Router:
     elif type == "wait":
       pass
     else:
-      print ("Unknown Packet Type: " + type)
       raise Exception("Unknown Packet Type " + type)
 
   def send_error(self, conn, msg, srcif):
     """ Send a no_route error message """
-    print("Got an error when trying to handle the packet")
-    print("Tried to handle this connection " + str(srcif))
-    print("Tried to handle this message " + str(msg))
+    print("SENDING AN ERROR")
     tempDict = {}
     tempDict[SRCE] = srcif.replace('.2', '.1')
     tempDict[DEST] = msg[SRCE]
@@ -469,13 +493,10 @@ class Router:
           print ("Destination: " + msg['dst'])
           print ("Message: " + json.dumps(msg['msg']))
           print ("---------------------------")
-          if not self.handle_packet(srcif, msg, conn):
-            print("WE ARE HERE SENDING ERROR")
+          if not self.handle_packet(srcif, msg):
             self.send_error(conn, msg, srcif)
         else:
           return
-
-
 
 
 if __name__ == "__main__":
