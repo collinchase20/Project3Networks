@@ -368,14 +368,16 @@ class Router:
       for i in range(len(Ftable)):
         if revoke[NTWK] == Ftable[i][NTWK] and revoke[NMSK] == Ftable[i][NMSK]:
           valuesToRemove.append(Ftable[i])
-          #Remove that revoked packet from our forwarding table
-          #indicesToRemove.append(i)
-          #del Ftable[i]
     print("THESE ARE THE VALUES TO REMOVE: " + str(valuesToRemove))
 
     #remove from our forard table
     for val in valuesToRemove:
       Ftable.remove(val)
+
+    for key in self.forwardTable:
+      for val in valuesToRemove:
+        if val[PEER] == key:
+          self.forwardTable[key].remove(val)
 
 
     # Get the relation of the current socket connection
