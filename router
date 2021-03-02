@@ -217,7 +217,7 @@ class Router:
     return (sum([bin(int(bits)).count("1") for bits in netmask.split(".")]))
 
 
-  def get_route(self, srcif, daddr, conn, msg):
+  def get_route(self, srcif, daddr):
     """ Select the best route for a given address """
     print("Starting get_route")
     peer = None
@@ -242,8 +242,6 @@ class Router:
       peer = routes[0]
     else:
       print("------------------_SHOULD NOT BE HERE THIS IS THE ROUTE LIST AT THIS POINT: " + str(routes))
-      self.send_error(conn, msg, srcif)
-      return
     return self.sockets[peer] if peer else None
   
   def get_lower_ip(self, ip1, ip2):
@@ -412,12 +410,12 @@ class Router:
     self.forward(packet[SRCE], tempDict)
     return True
 
-  def handle_packet(self, srcif, packet, conn):
+  def handle_packet(self, srcif, packet):
     """ dispatches a packet """
     type = packet['type']
     if type == DATA:
       print("Starting Forward")
-      route = self.get_route(srcif, packet[DEST], conn, packet)
+      route = self.get_route(srcif, packet[DEST])
       return self.forward(srcif, packet, route)
     elif type == UPDT:
       print("Starting Update")
@@ -468,7 +466,7 @@ class Router:
           print ("Destination: " + msg['dst'])
           print ("Message: " + json.dumps(msg['msg']))
           print ("---------------------------")
-          if not self.handle_packet(srcif, msg, conn):
+          if not self.handle_packet(srcif, msg,):
             self.send_error(conn, msg, srcif)
         else:
           return
