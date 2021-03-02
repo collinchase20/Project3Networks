@@ -360,13 +360,14 @@ class Router:
     self.revokes[packet[SRCE]] = packet
     Ftable = self.build_forward_table()
     revokedNetworks = packet[MESG]
+    revokedSource = packet[SRCE]
 
     #remove reovked packets from our forwarding table
     #indicesToRemove = []
     valuesToRemove = []
     for revoke in revokedNetworks:
       for i in range(len(Ftable)):
-        if revoke[NTWK] == Ftable[i][NTWK] and revoke[NMSK] == Ftable[i][NMSK]:
+        if revoke[NTWK] == Ftable[i][NTWK] and revoke[NMSK] == Ftable[i][NMSK] and revokedSource == Ftable[i][PEER]:
           valuesToRemove.append(Ftable[i])
     print("THESE ARE THE VALUES TO REMOVE: " + str(valuesToRemove))
 
