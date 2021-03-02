@@ -270,7 +270,7 @@ class Router:
       return lowest_ip
 
 
-  def forward(self, srcif, packet, route=None):
+  def forward(self, srcif, packet, conn, route=None):
     """ Forward a data packet """
     #Handling a DATA message
     if route != None:
@@ -278,7 +278,8 @@ class Router:
       return True
     #Handling a DUMP Message
     else:
-      self.sockets[srcif].sendall(json.dumps(packet).encode())
+      self.send_error(conn, packet, srcif)
+      #self.sockets[srcif].sendall(json.dumps(packet).encode())
 
   def coalesce(self):
     """ coalesce any routes that are right next to each other """
@@ -407,16 +408,17 @@ class Router:
     tempDict[TYPE] = TABL
     tempDict[MESG] = forwardTable
     print("THIS IS THE FORWARDING TABLE IN THE DUMP: " + str(tempDict[MESG]))
-    self.forward(packet[SRCE], tempDict)
+    #self.forward(packet[SRCE], tempDict)
+    self.sockets[packet[SRCE]].sendall(json.dumps(tempDict).encode())
     return True
 
-  def handle_packet(self, srcif, packet):
+  def handle_packet(self, srcif, packet, conn):
     """ dispatches a packet """
     type = packet['type']
     if type == DATA:
       print("Starting Forward")
       route = self.get_route(srcif, packet[DEST])
-      return self.forward(srcif, packet, route)
+      return self.forward(srcif, packet, conn, route)
     elif type == UPDT:
       print("Starting Update")
       return self.update(srcif, packet)
@@ -466,7 +468,7 @@ class Router:
           print ("Destination: " + msg['dst'])
           print ("Message: " + json.dumps(msg['msg']))
           print ("---------------------------")
-          if not self.handle_packet(srcif, msg,):
+          if not self.handle_packet(srcif, msg, conn):
             self.send_error(conn, msg, srcif)
         else:
           return
