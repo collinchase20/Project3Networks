@@ -199,14 +199,15 @@ class Router:
     print("DOING GET ORIGIN FOR THESE ROUTES: " + str(routes))
     relation = self.relations[srcif]
     outroutes = []
-    if relation == CUST:
-      return routes
-    else:
-      for route in routes:
-        destinationRelationship = self.relations[route]
-        #Drop the Data Message
-        if destinationRelationship == CUST:
-          outroutes.append(route)
+    for route in routes:
+      destinationRelationship = self.relations[route]
+      # Drop the Data Message
+      if destinationRelationship == CUST:
+        outroutes.append(route)
+      elif relation == CUST:
+        outroutes.append(route)
+      else:
+        return []
     return outroutes
 
 
