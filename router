@@ -278,7 +278,8 @@ class Router:
       return True
     #Handling a DUMP Message
     else:
-      self.send_error(conn, packet, srcif)
+      #self.send_error(conn, packet, srcif)
+      return False
       #self.sockets[srcif].sendall(json.dumps(packet).encode())
 
   def coalesce(self):
