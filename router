@@ -76,7 +76,7 @@ class Router:
     return outroutes
 
 
-  def get_shortest_as_path(self, routes):
+  def get_shortest_as_path(self, routes, daddr):
     """ select the route with the shortest AS Path, the route with the smallest AS path list """
     if len(routes) == 1:
       return routes
@@ -88,18 +88,19 @@ class Router:
         for key in self.forwardTable:
           if key == route:
             for packet in self.forwardTable[key]:
-              if len(packet[APTH]) < smallestRoute:
-                outroutes = [route]
-                smallestRoute = len(packet[APTH])
-              elif len(packet[APTH]) == smallestRoute:
-                if route in outroutes:
-                  continue
-                else:
-                  outroutes.append(route)
+              if packet["network"].split(".")[0] == daddr.split(".")[0]:
+                if len(packet[APTH]) < smallestRoute:
+                  outroutes = [route]
+                  smallestRoute = len(packet[APTH])
+                elif len(packet[APTH]) == smallestRoute:
+                  if route in outroutes:
+                    continue
+                  else:
+                    outroutes.append(route)
     return outroutes
 
 
-  def get_highest_preference(self, routes):
+  def get_highest_preference(self, routes, daddr):
     """ select the route with the highest Local Preference. Select routes with a higher number for this value """
     #This is the route with the highest local preference value
     # TODO
@@ -113,17 +114,18 @@ class Router:
         for key in self.forwardTable:
           if key == route:
             for packet in self.forwardTable[key]:
-              if packet[LPRF] >= highestLP:
-                if route in outroutes:
-                  continue
-                else:
-                  highestLP = packet[LPRF]
-                  outroutes.append(route)
+              if packet["network"].split(".")[0] == daddr.split(".")[0]:
+                if packet[LPRF] >= highestLP:
+                  if route in outroutes:
+                    continue
+                  else:
+                    highestLP = packet[LPRF]
+                    outroutes.append(route)
 
       return outroutes
 
 
-  def get_self_origin(self, routes):
+  def get_self_origin(self, routes, daddr):
     """ select self originating routes. A True value is preferred over a False value """
     #These are the routes where "selfOrigin" is true
     if len(routes) == 1:
@@ -135,11 +137,12 @@ class Router:
         for key in self.forwardTable:
           if key == route:
             for packet in self.forwardTable[key]:
-              if packet[SORG] == True:
-                if route in outroutes:
-                  continue
-                else:
-                  outroutes.append(route)
+              if packet["network"].split(".")[0] == daddr.split(".")[0]:
+                if packet[SORG] == True:
+                  if route in outroutes:
+                    continue
+                  else:
+                    outroutes.append(route)
       #Check if none of the routes had a true value
       if len(outroutes) == 0:
         return routes
@@ -175,11 +178,11 @@ class Router:
     # Rules go here
     if routes:
       # 1. Highest Preference
-      routes = self.get_highest_preference(routes)
+      routes = self.get_highest_preference(routes, daddr)
       # 2. Self Origin
-      routes = self.get_self_origin(routes)
+      routes = self.get_self_origin(routes, daddr)
       # 3. Shortest ASPath
-      routes = self.get_shortest_as_path(routes)
+      routes = self.get_shortest_as_path(routes, daddr)
       # 4. EGP > IGP > UNK
       #routes = self.get_origin_routes(routes)
       # 5. Lowest IP Address

@@ -17,6 +17,8 @@
 
 ./sim --test_dir ./tests --router ./router ./tests/3-1-simple-revoke.conf
 
+./sim --test_dir ./tests --router ./router ./tests/3-2-bad-route.conf
+
 
 
 
