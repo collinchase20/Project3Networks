@@ -411,6 +411,7 @@ class Router:
     tempDict[TYPE] = TABL
     #tempDict[MESG] = self.forwardTable
     tempDict[MESG] = self.build_forward_table()
+    print("THIS IS THE FORWARDING TABLE IN THE DUMP: " + tempDict[MESG])
     self.forward(packet[SRCE], tempDict)
     return True
 
