@@ -372,9 +372,6 @@ class Router:
     print("THESE ARE THE VALUES TO REMOVE: " + str(valuesToRemove))
 
     #remove from our forard table
-    for val in valuesToRemove:
-      Ftable.remove(val)
-
     for key in self.forwardTable:
       for val in valuesToRemove:
         if val[PEER] == key:
