@@ -192,11 +192,12 @@ class Router:
                     else:
                       if route not in outroutes:
                         outroutes.append(route)
+                        UNKRoutes += 1
     return outroutes
 
   def filter_relationships(self, srcif, routes):
     """ Don't allow Peer->Peer, Peer->Prov, or Prov->Peer forwards """
-    print("DOING GET ORIGIN FOR THESE ROUTES: " + str(routes))
+    print("DOING FILTER RELATIONSHIPS FOR THESE ROUTES: " + str(routes))
     relation = self.relations[srcif]
     outroutes = []
     for route in routes:
@@ -210,10 +211,6 @@ class Router:
         return []
     return outroutes
 
-
-  def get_lowest_address(self, routes):
-    lowestRoutes = []
-    return lowestRoutes
 
   def get_cidr_from_netmask(self, netmask):
     #For later use
@@ -240,11 +237,11 @@ class Router:
       routes = [self.get_lowest_ip(routes)]
       # Final check: enforce peering relationships
       routes = self.filter_relationships(srcif, routes)
-    print("THESE ARE THE ROUTES AFTER THE FILTERS BEFORE SELECTING THE FIRST: " + str(routes))
+    print("THESE ARE THE ROUTES AFTER ALL THE FILTERS: " + str(routes))
     if len(routes) == 1:
       peer = routes[0]
     else:
-      print("THIS IS THE ROUTE LIST AT THIS POINT: " + str(routes))
+      print("------------------_SHOULD NOT BE HERE THIS IS THE ROUTE LIST AT THIS POINT: " + str(routes))
     return self.sockets[peer] if peer else None
   
   def get_lower_ip(self, ip1, ip2):
@@ -263,7 +260,7 @@ class Router:
     return ip1
 
   def get_lowest_ip(self, ip_list):
-    print("DOING GET ORIGIN FOR THESE ROUTES: " + str(ip_list))
+    print("DOING GET LOWEST IP FOR THESE ROUTES: " + str(ip_list))
     lowest_ip = None
     if len(ip_list) == 1:
       return ip_list[0]
@@ -342,9 +339,6 @@ class Router:
           self.send_update(s, packet)
     return True
 
-
-
-
   def send_revoke(self, srcif, packet):
     revokePacket = copy.deepcopy(packet)
     revokePacket[SRCE] = srcif.replace('.2', '.1')
@@ -407,7 +401,6 @@ class Router:
   def dump(self, packet):
     """ handles dump table requests """
     forwardTable = self.build_forward_table()
-    #del forwardTable[1]
     tempDict = {}
     tempDict[SRCE] = packet[DEST]
     tempDict[DEST] = packet[SRCE]

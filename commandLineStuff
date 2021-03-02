@@ -2,9 +2,6 @@
 
 ./sim --test_dir ./tests --router ./router milestone
 
-
-
-
 ./sim --test_dir ./tests --router ./router ./tests/2-1-loop-select-hpref.conf
 
 ./sim --test_dir ./tests --router ./router ./tests/2-2-loop-select-sorg.conf
@@ -18,6 +15,9 @@
 ./sim --test_dir ./tests --router ./router ./tests/3-1-simple-revoke.conf
 
 ./sim --test_dir ./tests --router ./router ./tests/3-2-bad-route.conf
+
+
+
 
 
 
