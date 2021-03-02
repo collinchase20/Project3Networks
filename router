@@ -149,10 +149,46 @@ class Router:
       else:
         return outroutes
 
-  def get_origin_routes(self, routes):
-    """ select origin routes: EGP > IGP > UNK """
-    # TODO
-    outroutes = []
+  def get_origin_routes(self, routes, daddr):
+    """ select origin routes: IGP > EGP > UNK """
+    if len(routes) == 1:
+      return routes
+    else:
+      print("DOING GET ORIGIN FOR THESE ROUTES: " + str(routes))
+      outroutes = []
+      EGPRoutes = 0
+      IGPRoutes = 0
+      UNKRoutes = 0
+      for route in routes:
+        for key in self.forwardTable:
+          if key == route:
+            for packet in self.forwardTable[key]:
+              if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
+                if packet[ORIG] == "IGP":
+                  if IGPRoutes == 0:
+                    outroutes = [route]
+                    IGPRoutes += 1
+                  else:
+                    if route not in outroutes:
+                      outroutes.append(route)
+                      IGPRoutes += 1
+                if packet[ORIG] == "EGP":
+                  if IGPRoutes == 0:
+                    if EGPRoutes == 0:
+                      outroutes = [route]
+                      EGPRoutes += 1
+                    else:
+                      if route not in outroutes:
+                        outroutes.append(route)
+                        EGPRoutes += 1
+                if packet[ORIG] == "UNK" :
+                  if IGPRoutes == 0 and EGPRoutes == 0:
+                    if UNKRoutes == 0:
+                      outroutes = [route]
+                      UNKRoutes += 1
+                    else:
+                      if route not in outroutes:
+                        outroutes.append(route)
     return outroutes
 
   def filter_relationships(self, srcif, routes):
