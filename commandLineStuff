@@ -38,26 +38,7 @@
 
 
 
-
-
-Type: update
-Src:192.168.0.2
-Dst:192.168.0.1
-Msg:{"network": "192.168.0.0", "netmask": "255.255.255.0", "localpref": 100, "ASPath": [1], "origin": "EGP", "selfOrigin": true}
-
-IGP > EGP > UNK
-
-This is one of the networks: 192.168.0.2-cust
-This is one of the networks: 172.168.0.2-cust
-This is the asn: 14
-
-
-ASN 2 -> 14 -> 1
-
-
-
-We are not sending to itself: 172.168.0.2 172.168.0.2
-	Error: got an unexpected message on interface 192.168.0.2
-	Got: {'type': 'update', 'src': '192.168.0.1', 'dst': '192.168.0.2', 'msg': {'network': '172.168.0.0', 'netmask': '255.255.0.0', 'localpref': 100, 'ASPath': [1, 14], 'origin': 'EGP', 'selfOrigin': True}}
-	Error: got an unexpected message on interface 172.168.0.2
-	Got: {'type': 'update', 'src': '172.168.0.1', 'dst': '172.168.0.2', 'msg': {'network': '192.168.0.0', 'netmask': '255.255.255.0', 'localpref': 100, 'ASPath': [2, 14], 'origin': 'EGP', 'selfOrigin': True}}
+[{'network': '192.168.1.0', 'netmask': '255.255.255.0', 'localpref': 100, 'ASPath': [1], 'origin': 'EGP', 'selfOrigin': True, 'peer': '192.168.0.2'},
+ {'network': '172.169.0.0', 'netmask': '255.255.0.0', 'localpref': 100, 'ASPath': [2], 'origin': 'EGP', 'selfOrigin': True, 'peer': '172.168.0.2'},
+  {'network': '11.0.0.0', 'netmask': '255.0.0.0', 'localpref': 100, 'ASPath': [3], 'origin': 'EGP', 'selfOrigin': True, 'peer': '10.0.0.2'},
+   {'network': '172.169.0.0', 'netmask': '255.255.0.0', 'localpref': 100, 'ASPath': [3, 2], 'origin': 'EGP', 'selfOrigin': False, 'peer': '10.0.0.2'}]
