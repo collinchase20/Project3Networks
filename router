@@ -469,6 +469,7 @@ class Router:
           print ("Message: " + json.dumps(msg['msg']))
           print ("---------------------------")
           if not self.handle_packet(srcif, msg, conn):
+            print("WE ARE HERE SENDING ERROR")
             self.send_error(conn, msg, srcif)
         else:
           return
