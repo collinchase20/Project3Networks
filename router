@@ -243,6 +243,7 @@ class Router:
     else:
       print("------------------_SHOULD NOT BE HERE THIS IS THE ROUTE LIST AT THIS POINT: " + str(routes))
       self.send_error(conn, msg, srcif)
+      return
     return self.sockets[peer] if peer else None
   
   def get_lower_ip(self, ip1, ip2):
