@@ -206,12 +206,15 @@ class Router:
         destinationRelationship = self.relations[route]
         #Drop the Data Message
         if destinationRelationship == PEER:
+          print("This is the PEER route: " + route)
           continue
         #Drop the Data Message
         elif destinationRelationship == PROV:
+          print("This is the PROV route: " + route)
           continue
         #Peer -> Cust append it
         else:
+          print("This is the CUST destination route: " + CUST)
           outroutes.append(route)
 
     #if len(outroutes) == 0:
