@@ -217,10 +217,10 @@ class Router:
           print("This is the CUST destination route: " + route)
           outroutes.append(route)
 
-    #if len(outroutes) == 0:
-    #  raise Exception("SHOULD NOT BE HERE")
-    #else:
-    return outroutes
+    if len(outroutes) == 0:
+      raise Exception("SHOULD NOT BE HERE")
+    else:
+      return outroutes
 
 
   def get_lowest_address(self, routes):
