@@ -220,7 +220,7 @@ class Router:
       # 3. Shortest ASPath
       routes = self.get_shortest_as_path(routes, daddr)
       # 4. EGP > IGP > UNK
-      #routes = self.get_origin_routes(routes)
+      routes = self.get_origin_routes(routes, daddr)
       # 5. Lowest IP Address
       #routes = self.get_lowest_address(routes)
       # Final check: enforce peering relationships
