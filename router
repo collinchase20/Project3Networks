@@ -252,6 +252,31 @@ class Router:
     if routes:
       peer = routes[0]
     return self.sockets[peer] if peer else None
+  
+  def get_lower_ip(self, ip1, ip2):
+    split_ip1 = ip1.split(".")
+    split_ip2 = ip2.split(".")
+
+    for i in range(len(split_ip1)):
+      if split_ip1[i] == split_ip2[i]:
+        continue
+      elif split_ip1[i] < split_ip2[i]:
+        return ip1
+      elif split_ip2[i] < split_ip1[i]:
+        return ip2
+      else :
+        return "!!!!! get_lowest_ip() broke with ips :", ip1, ip2
+    return ip1
+
+  def get_lowest_ip(self, ip_list):
+    lowest_ip = None
+    if len(ip_list) == 1:
+      return ip_list[0]
+    else:
+      for i in range(len(ip_list) - 1):
+        lowest_ip = get_lower_ip(ip_list[i], ip_list[i + 1])
+      return lowest_ip
+
 
   def forward(self, srcif, packet, route=None):
     """ Forward a data packet """
