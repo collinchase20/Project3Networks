@@ -198,10 +198,10 @@ class Router:
     """ Don't allow Peer->Peer, Peer->Prov, or Prov->Peer forwards """
     print("DOING GET ORIGIN FOR THESE ROUTES: " + str(routes))
     relation = self.relations[srcif]
+    outroutes = []
     if relation == CUST:
       return routes
     else:
-      outroutes = []
       for route in routes:
         destinationRelationship = self.relations[route]
         #Drop the Data Message
