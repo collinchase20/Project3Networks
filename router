@@ -214,7 +214,7 @@ class Router:
           continue
         #Peer -> Cust append it
         else:
-          print("This is the CUST destination route: " + CUST)
+          print("This is the CUST destination route: " + route)
           outroutes.append(route)
 
     #if len(outroutes) == 0:
