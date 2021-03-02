@@ -64,7 +64,7 @@ class Router:
     for key in self.forwardTable:
       for packet in self.forwardTable[key]:
         # Check the first part of IP addresses
-        if packet["network"].split(".")[0] == daddr.split(".")[0]:
+        if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
           # Check the second part of the netmask
           #if packet["netmask"].split(".")[1] == '255':
             # IF the second part of the netmask is 255 then the second part of the IP addresses need to match
@@ -88,7 +88,7 @@ class Router:
         for key in self.forwardTable:
           if key == route:
             for packet in self.forwardTable[key]:
-              if packet["network"].split(".")[0] == daddr.split(".")[0]:
+              if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
                 if len(packet[APTH]) < smallestRoute:
                   outroutes = [route]
                   smallestRoute = len(packet[APTH])
@@ -114,7 +114,7 @@ class Router:
         for key in self.forwardTable:
           if key == route:
             for packet in self.forwardTable[key]:
-              if packet["network"].split(".")[0] == daddr.split(".")[0]:
+              if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
                 if packet[LPRF] >= highestLP:
                   if route in outroutes:
                     continue
@@ -137,7 +137,7 @@ class Router:
         for key in self.forwardTable:
           if key == route:
             for packet in self.forwardTable[key]:
-              if packet["network"].split(".")[0] == daddr.split(".")[0]:
+              if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
                 if packet[SORG] == True:
                   if route in outroutes:
                     continue
