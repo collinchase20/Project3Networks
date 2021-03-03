@@ -297,27 +297,45 @@ class Router:
     else:
       return False
 
+  def isAdjacent(self, route1, route2):
+    r1 = route1[NTWK].split()
+    r2 = route2[NTWK].split()
+    r1netmask = route1[NMSK]
+    r2netmask = route2[NMSK]
+    if r1[0] == r2[0] and r1[1] == r2[1]:
+      if r1[2] == r2[2] - 1 or r1[2] == r2[2] + 1:
+        if r1netmask == r2netmask:
+          return True
+    return False
+
   def coalesce(self):
     """ coalesce any routes that are right next to each other """
     possibleCIDR = [32, 24, 16, 8, 0]
 
-    for cidr in possibleCIDR:
-      for key in self.forwardTable:
-        for route in self.forwardTable[key]:
-          matchingRoutes = []
-          routeCIDR = self.get_cidr_from_netmask(route[NMSK])
-          if routeCIDR == cidr:
-            matchingRoutes.append(route)
+    ft = self.build_forward_table()
 
-          # Check the matches against eachother to see if they are possible to be coalesced
-          for i in range(len(matchingRoutes)):
-            for j in range(i + 1, len(matchingRoutes)):
-              if matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
-                print("THIS IS THE COALESCE MATCH: " + str(matchingRoutes[i] + " and " + str(matchingRoutes[j])))
-                self.coalesce_routes(matchingRoutes[i], matchingRoutes[j])
+    #for cidr in possibleCIDR:
+    #  for key in self.forwardTable:
+    #    for route in self.forwardTable[key]:
+    #      matchingRoutes = []
+    #      routeCIDR = self.get_cidr_from_netmask(route[NMSK])
+    #      if routeCIDR == cidr:
+    #        matchingRoutes.append(route)
+
+    matchingRoutes = []
+    for n in range(len(ft)):
+      matchingRoutes = []
+      for m in range(n + 1, len(ft)):
+        if self.isAdjacent(ft[n], ft[m]):
+          matchingRoutes.append(ft[n])
+          matchingRoutes.append(ft[m])
+      for i in range(len(matchingRoutes)):
+        for j in range(i+1, len(matchingRoutes)):
+          if matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
+            print("THIS IS THE COALESCE MATCH: " + str(matchingRoutes[i] + " and " + str(matchingRoutes[j])))
+            self.coalesce_routes(matchingRoutes[i], matchingRoutes[j])
 
     return True
-
 
 
   def coalesce_routes(self, route1, route2):
