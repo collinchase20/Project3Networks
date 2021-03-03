@@ -309,7 +309,7 @@ class Router:
     print("This is r2[1] " + r2[1])
     if r1[0] == r2[0] and r1[1] == r2[1]:
       print("First and Second part of IP equals")
-      if r1[2] == r2[2] - 1 or r1[2] == r2[2] + 1:
+      if int(r1[2]) == int(r2[2]) - 1 or int(r1[2]) == int(r2[2]) + 1:
         print("third number is 1 off")
         if r1netmask == r2netmask:
           print("netmasks equal!")
