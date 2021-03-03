@@ -320,8 +320,8 @@ class Router:
     """ coalesce any routes that are right next to each other """
     #ft = self.build_forward_table()
     #matchingRoutes = []
-    ftReversed = ft.reverse()
-    for n in range(len(ftReversed)):
+    #ftReversed = ft.reverse()
+    for n in range(len(ft)):
       matchingRoutes = []
       for m in range(n + 1, len(ft)):
         if self.isAdjacent(ft[n], ft[m]):
