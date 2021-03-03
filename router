@@ -316,10 +316,10 @@ class Router:
           return True
     return False
 
-  def coalesce(self):
+  def coalesce(self, ft):
     """ coalesce any routes that are right next to each other """
-    ft = self.build_forward_table()
-    matchingRoutes = []
+    #ft = self.build_forward_table()
+    #matchingRoutes = []
     for n in range(len(ft)):
       matchingRoutes = []
       for m in range(n + 1, len(ft)):
@@ -333,6 +333,7 @@ class Router:
             print("THIS IS THE COALESCE MATCH 1: " + str(matchingRoutes[i]))
             print("THIS IS THE COALESCE MATCH 2: " + str(matchingRoutes[j]))
             self.coalesce_routes(matchingRoutes[i], matchingRoutes[j])
+            self.coalesce(self.build_forward_table())
     return True
 
   def coalesce_routes(self, route1, route2):
@@ -355,7 +356,6 @@ class Router:
     updatePacket[SRCE] = srcif.replace('.2', '.1')
     updatePacket[DEST] = srcif
     updatePacket[MESG][APTH].append(int(self.asn))
-    print("SENDING THE FOLLOWING UPDATE MESSAGE: " + str(packet))
     self.sockets[srcif].sendall(json.dumps(updatePacket).encode())
 
   def update(self, srcif, packet):
@@ -393,7 +393,6 @@ class Router:
       if relation == CUST:
         #Make sure we do not send the update to ourself
         if s == srcif:
-          print("We are not sending to itself: " + str(s) + " " + str(srcif))
           continue
         else:
           self.send_update(s, packet)
@@ -435,8 +434,7 @@ class Router:
         if val[PEER] == key:
           self.forwardTable[key].remove(val)
 
-    self.coalesce()
-
+    self.coalesce(self.build_forward_table())
 
     # Get the relation of the current socket connection
     relation = self.relations[srcif]
@@ -466,7 +464,7 @@ class Router:
 
   def dump(self, packet):
     """ handles dump table requests """
-    self.coalesce()
+    self.coalesce(self.build_forward_table())
     forwardTable = self.build_forward_table()
     tempDict = {}
     tempDict[SRCE] = packet[DEST]
