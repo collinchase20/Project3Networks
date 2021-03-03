@@ -299,8 +299,8 @@ class Router:
 
   def isAdjacent(self, route1, route2):
     print("COMPARING THESE TWO ROUTES: " + str(route1) + " and this route " + str(route2))
-    r1 = route1[NTWK].split()
-    r2 = route2[NTWK].split()
+    r1 = route1[NTWK].split(".")
+    r2 = route2[NTWK].split(".")
     r1netmask = route1[NMSK]
     r2netmask = route2[NMSK]
     print("This is r1[0] " + r1[0])
