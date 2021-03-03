@@ -348,7 +348,7 @@ class Router:
     route1CIDR = self.get_cidr_from_netmask(route2[NMSK])
     route1CIDR = route1CIDR - 1
     for route in self.forwardTable[route1PEER]:
-      if route == route2:
+      if route == route1:
         print("Modifying This Route: " + str(route1))
         route[NMSK] = self.get_netmask_from_cidr(route1CIDR)
         #route[NTWK] = route2[NTWK]
