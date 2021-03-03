@@ -239,7 +239,6 @@ class Router:
     peer = None
     routes = self.lookup_routes(daddr)
     print("THESE ARE THE ROUTES AFTER LOOKING UP ROUTES: " + str(routes))
-    routes = self.get_longest_prefix_matching(routes, daddr)
     # Rules go here
     if routes:
       # 1. Highest Preference
