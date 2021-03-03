@@ -308,8 +308,8 @@ class Router:
       if int(r1[2]) == int(r2[2]) - 1 or int(r1[2]) == int(r2[2]) + 1:
         if r1netmask == r2netmask:
           return True
-        elif r1CIDR == r2CIDR - 1 or r1CIDR == r2CIDR + 1:
-          return True
+        #elif r1CIDR == r2CIDR - 1 or r1CIDR == r2CIDR + 1:
+        #  return True
     return False
 
   def coalesce(self, ft):
@@ -406,6 +406,8 @@ class Router:
       elif relation == PEER or relation == PROV:
         if self.relations[s] == CUST:
           self.send_update(s, packet)
+
+    self.coalesce(self.build_forward_table())
     return True
 
   def send_revoke(self, srcif, packet):
@@ -470,7 +472,6 @@ class Router:
 
   def dump(self, packet):
     """ handles dump table requests """
-    self.coalesce(self.build_forward_table())
     forwardTable = self.build_forward_table()
     tempDict = {}
     tempDict[SRCE] = packet[DEST]
