@@ -303,6 +303,10 @@ class Router:
     r2 = route2[NTWK].split()
     r1netmask = route1[NMSK]
     r2netmask = route2[NMSK]
+    print("This is r1[0] " + r1[0])
+    print("This is r2[0] " + r2[0])
+    print("This is r1[1] " + r1[1])
+    print("This is r2[1] " + r2[1])
     if r1[0] == r2[0] and r1[1] == r2[1]:
       print("First and Second part of IP equals")
       if r1[2] == r2[2] - 1 or r1[2] == r2[2] + 1:
