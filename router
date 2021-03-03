@@ -367,8 +367,8 @@ class Router:
 
   def get_new_network(self, route1, route2):
     newNetwork = [0, 0, 0, 0]
-    route1Network = route1[NTWK].split()
-    route2Network = route2[NTWK].split()
+    route1Network = route1[NTWK].split(".")
+    route2Network = route2[NTWK].split(".")
     for i in range(0, 2):
       if route1Network[i] == route2Network[i]:
         newNetwork[i] = route1Network[i]
