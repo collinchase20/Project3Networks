@@ -330,8 +330,8 @@ class Router:
       for i in range(len(matchingRoutes)):
         for j in range(i+1, len(matchingRoutes)):
           if matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
-            print("THIS IS THE COALESCE MATCH 1: " + str(matchingRoutes[i]))
-            print("THIS IS THE COALESCE MATCH 2: " + str(matchingRoutes[j]))
+            print("MATCH 1: " + str(matchingRoutes[i]))
+            print("MATCH 2: " + str(matchingRoutes[j]))
             self.coalesce_routes(matchingRoutes[i], matchingRoutes[j])
             #self.coalesce(self.build_forward_table())
     return True
@@ -350,6 +350,10 @@ class Router:
       if route == route1:
         route[NMSK] = self.get_netmask_from_cidr(route1CIDR)
         route[NTWK] = route2[NTWK]
+
+    print("--------------------------------------------------------------------------------")
+    print("AFTER COALESING ROUTES: " + str(self.build_forward_table()))
+    print("--------------------------------------------------------------------------------")
 
   def send_update(self, srcif, packet):
     updatePacket = copy.deepcopy(packet)
