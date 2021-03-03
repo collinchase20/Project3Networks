@@ -361,7 +361,7 @@ class Router:
     route1CIDR = route1CIDR - 1
     for route in self.forwardTable[route1PEER]:
       if route == route1:
-        route[NMSK] = self.get_netmask_from_cidr(route1CIDR)
+        route[NMSK] = self.get_netmask_from_cidr(int(route1CIDR))
         route[NTWK] = self.get_new_network(route1, route2)
 
 
