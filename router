@@ -444,8 +444,6 @@ class Router:
         if val[PEER] == key:
           self.forwardTable[key].remove(val)
 
-    self.coalesce(self.build_forward_table())
-
     # Get the relation of the current socket connection
     relation = self.relations[srcif]
     # 3.)Potentially send copies of the announcement to neighboring routers
