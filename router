@@ -369,9 +369,12 @@ class Router:
     newNetwork = [0, 0, 0, 0]
     route1Network = route1[NTWK].split(".")
     route2Network = route2[NTWK].split(".")
-    for i in range(0, 2):
+    for i in range(0, 1):
       if route1Network[i] == route2Network[i]:
         newNetwork[i] = route1Network[i]
+
+    newNetwork[2] = route1Network[2]
+    newNetwork[3] = route1Network[3]
     network = "{}.{}.{}.{}".format(newNetwork[0], newNetwork[1], newNetwork[2], newNetwork[3])
     return network
 

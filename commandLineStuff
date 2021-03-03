@@ -42,6 +42,28 @@
 
 
 
+[{'network': '192.168.2.0', 'netmask': '255.255.255.0', 'localpref': 100, 'ASPath': [1], 'origin': 'EGP', 'selfOrigin': True, 'peer': '192.168.0.2'}
+, {'network': '192.168.3.0', 'netmask': '255.255.255.0', 'localpref': 100, 'ASPath': [1], 'origin': 'EGP', 'selfOrigin': True, 'peer': '192.168.0.2'}
+, {'network': '172.169.0.0', 'netmask': '255.255.0.0', 'localpref': 100, 'ASPath': [2], 'origin': 'EGP', 'selfOrigin': True, 'peer': '172.168.0.2'}]
+
+
+
+Extra Route in Table: 192.168.2.0/24->192.168.0.2
+Extra Route in Table: 192.168.3.0/24->192.168.0.2
+Missing Route: 192.168.2.0/23->192.168.0.2
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
