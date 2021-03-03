@@ -25,6 +25,22 @@
 
 
 
+./sim --test_dir ./tests --router ./router ./tests/5-1-provider-default-route.conf
+
+./sim --test_dir ./tests --router ./router ./tests/5-2-longest-prefix.conf
+
+
+
+
+./sim --test_dir ./tests --router ./router ./tests/6-1-coalesce-simple.conf
+
+./sim --test_dir ./tests --router ./router ./tests/6-2-coalesce-complex.conf
+
+./sim --test_dir ./tests --router ./router ./tests/6-3-disaggregate.conf
+
+
+
+
 
 
 
