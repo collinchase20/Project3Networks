@@ -326,13 +326,14 @@ class Router:
         if self.isAdjacent(ftReversed[n], ftReversed[m]):
           matchingRoutes.append(ftReversed[n])
           matchingRoutes.append(ftReversed[m])
+
       for i in range(len(matchingRoutes)):
         for j in range(i+1, len(matchingRoutes)):
           if matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
             print("THIS IS THE COALESCE MATCH 1: " + str(matchingRoutes[i]))
             print("THIS IS THE COALESCE MATCH 2: " + str(matchingRoutes[j]))
             self.coalesce_routes(matchingRoutes[i], matchingRoutes[j])
-            self.coalesce(self.build_forward_table())
+            #self.coalesce(self.build_forward_table())
     return True
 
   def coalesce_routes(self, route1, route2):
