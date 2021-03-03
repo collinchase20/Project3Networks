@@ -329,6 +329,7 @@ class Router:
         if self.isAdjacent(ft[n], ft[m]):
           matchingRoutes.append(ft[n])
           matchingRoutes.append(ft[m])
+      print("THESE ARE THE MATCHING ROUTES: " + str(matchingRoutes))
       for i in range(len(matchingRoutes)):
         for j in range(i+1, len(matchingRoutes)):
           if matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
