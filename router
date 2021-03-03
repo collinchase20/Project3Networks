@@ -341,7 +341,8 @@ class Router:
       for i in range(len(matchingRoutes)):
         for j in range(i+1, len(matchingRoutes)):
           if matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
-            print("THIS IS THE COALESCE MATCH: " + str(matchingRoutes[i] + " and " + str(matchingRoutes[j])))
+            print("THIS IS THE COALESCE MATCH 1: " + str(matchingRoutes[i]))
+            print("THIS IS THE COALESCE MATCH 2: " + str(matchingRoutes[j]))
             self.coalesce_routes(matchingRoutes[i], matchingRoutes[j])
 
     return True
