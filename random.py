@@ -18,6 +18,9 @@ def get_cidr_from_netmask(netmask):
 
 
 
-print(get_cidr_from_netmask("255.0.0.0"))
+#print(get_cidr_from_netmask("255.0.0.0"))
 
 print(get_netmask_from_cidr(23))
+
+
+print(get_netmask_from_cidr(22))
