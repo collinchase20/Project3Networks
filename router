@@ -312,7 +312,7 @@ class Router:
           # Check the matches against eachother to see if they are possible to be coalesced
           for i in range(len(matchingRoutes)):
             for j in range(i + 1, len(matchingRoutes)):
-              if (matchingRoutes[i][NTWK].split()[0] == matchingRoutes[j][NTWK].split()[0]) and matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
+              if matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
                 print("THIS IS THE COALESCE MATCH: " + str(matchingRoutes[i] + " and " + str(matchingRoutes[j])))
                 self.coalesce_routes(matchingRoutes[i], matchingRoutes[j])
 
@@ -341,7 +341,7 @@ class Router:
     newNetwork = [0, 0, 0, 0]
     route1Network = route1[NTWK].split()
     route2Network = route2[NTWK].split()
-    for i in range(0, 1):
+    for i in range(0, 2):
       if route1Network[i] == route2Network[i]:
         newNetwork[i] = route1Network[i]
     network = "{}.{}.{}.{}".format(newNetwork[0], newNetwork[1], newNetwork[2], newNetwork[3])
