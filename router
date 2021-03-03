@@ -341,6 +341,7 @@ class Router:
     for key in self.forwardTable:
       for route in self.forwardTable[key]:
         if route == route2:
+          print("Removing This Route: " + str(route2))
           self.forwardTable[key].remove(route)
     #Modify Route 1
     route1PEER = route1[PEER]
@@ -348,6 +349,7 @@ class Router:
     route1CIDR = route1CIDR - 1
     for route in self.forwardTable[route1PEER]:
       if route == route1:
+        print("Modifying This Route: " + str(route1))
         route[NMSK] = self.get_netmask_from_cidr(route1CIDR)
         route[NTWK] = route2[NTWK]
 
