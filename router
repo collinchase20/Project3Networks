@@ -195,50 +195,26 @@ class Router:
                         UNKRoutes += 1
     return outroutes
 
-  def filter_relationships2(self, srcif, routes):
-    """ Don't allow Peer->Peer, Peer->Prov, or Prov->Peer forwards """
-    print("DOING FILTER RELATIONSHIPS FOR THESE ROUTES: " + str(routes))
-    relation = self.relations[srcif]
-    outroutes = []
-    for route in routes:
-      destinationRelationship = self.relations[route]
-      # Drop the Data Message
-      if destinationRelationship == CUST:
-        outroutes.append(route)
-      elif relation == CUST:
-        outroutes.append(route)
-      else:
-        return []
-    return outroutes
-
   def filter_relationships(self, srcif, routes):
     """ Don't allow Peer->Peer, Peer->Prov, or Prov->Peer forwards """
     print("DOING FILTER RELATIONSHIPS FOR THESE ROUTES: " + str(routes))
     relation = self.relations[srcif]
     outroutes = []
+    #If our source is a customer we send to all the neighbors
     if relation == CUST:
       return routes
     else:
       for route in routes:
         destinationRelationship = self.relations[route]
+        #Only allow a peer or a provider to send to a customer
         if destinationRelationship == PEER:
           continue
+        #Only allow a peer or a provider to send to a customer
         elif destinationRelationship == PROV:
           continue
+        #Our destination is a customer and our source is a peer or provider so we are good to send
         else:
           outroutes.append(route)
-    return outroutes
-
-    outroutes = []
-    for route in routes:
-      destinationRelationship = self.relations[route]
-      # Drop the Data Message
-      if destinationRelationship == CUST:
-        outroutes.append(route)
-      elif relation == CUST:
-        outroutes.append(route)
-      else:
-        return []
     return outroutes
 
 
@@ -268,16 +244,15 @@ class Router:
       # Final check: enforce peering relationships
       routes = self.filter_relationships(srcif, routes)
     print("THESE ARE THE ROUTES AFTER ALL THE FILTERS: " + str(routes))
-    if len(routes) == 1:
-      peer = routes[0]
+    if len(routes) != 1:
+      raise Exception ("Error: More than one route after filtering through the routes")
     else:
-      print("------------------_SHOULD NOT BE HERE THIS IS THE ROUTE LIST AT THIS POINT: " + str(routes))
+      peer = routes[0]
     return self.sockets[peer] if peer else None
   
   def get_lower_ip(self, ip1, ip2):
     split_ip1 = ip1.split(".")
     split_ip2 = ip2.split(".")
-
     for i in range(len(split_ip1)):
       if split_ip1[i] == split_ip2[i]:
         continue
