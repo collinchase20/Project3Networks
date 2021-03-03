@@ -349,7 +349,7 @@ class Router:
     for route in self.forwardTable[route1PEER]:
       if route == route1:
         route[NMSK] = self.get_netmask_from_cidr(route1CIDR)
-        route[NTWK] = route1[NTWK]
+        route[NTWK] = route2[NTWK]
 
   def send_update(self, srcif, packet):
     updatePacket = copy.deepcopy(packet)
