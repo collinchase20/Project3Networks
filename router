@@ -319,13 +319,13 @@ class Router:
     print("--------------------------------------------------------------------------------")
     #ft = self.build_forward_table()
     matchingRoutes = []
-    ftReversed = ft[::-1]
-    for n in range(len(ftReversed)):
+    #ftReversed = ft[::-1]
+    for n in range(len(ft)):
       matchingRoutes = []
       for m in range(n + 1, len(ft)):
-        if self.isAdjacent(ftReversed[n], ftReversed[m]):
-          matchingRoutes.append(ftReversed[n])
-          matchingRoutes.append(ftReversed[m])
+        if self.isAdjacent(ft[n], ft[m]):
+          matchingRoutes.append(ft[n])
+          matchingRoutes.append(ft[m])
 
       for i in range(len(matchingRoutes)):
         for j in range(i+1, len(matchingRoutes)):
@@ -340,17 +340,17 @@ class Router:
     #Remove one of the routes from our forwarding table
     for key in self.forwardTable:
       for route in self.forwardTable[key]:
-        if route == route1:
-          print("Removing This Route: " + str(route1))
+        if route == route2:
+          print("Removing This Route: " + str(route2))
           self.forwardTable[key].remove(route)
     #Modify Route 1
-    route2PEER = route2[PEER]
-    route2CIDR = self.get_cidr_from_netmask(route1[NMSK])
-    route2CIDR = route2CIDR - 1
-    for route in self.forwardTable[route2PEER]:
+    route1PEER = route1[PEER]
+    route1CIDR = self.get_cidr_from_netmask(route2[NMSK])
+    route1CIDR = route1CIDR - 1
+    for route in self.forwardTable[route1PEER]:
       if route == route2:
-        print("Modifying This Route: " + str(route2))
-        route[NMSK] = self.get_netmask_from_cidr(route2CIDR)
+        print("Modifying This Route: " + str(route1))
+        route[NMSK] = self.get_netmask_from_cidr(route1CIDR)
         #route[NTWK] = route2[NTWK]
 
     print("--------------------------------------------------------------------------------")
