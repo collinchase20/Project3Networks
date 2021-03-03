@@ -298,13 +298,17 @@ class Router:
       return False
 
   def isAdjacent(self, route1, route2):
+    print("COMPARING THESE TWO ROUTES: " + str(route1) + " and this route " + str(route2))
     r1 = route1[NTWK].split()
     r2 = route2[NTWK].split()
     r1netmask = route1[NMSK]
     r2netmask = route2[NMSK]
     if r1[0] == r2[0] and r1[1] == r2[1]:
+      print("First and Second part of IP equals")
       if r1[2] == r2[2] - 1 or r1[2] == r2[2] + 1:
+        print("third number is 1 off")
         if r1netmask == r2netmask:
+          print("netmasks equal!")
           return True
     return False
 
