@@ -305,9 +305,11 @@ class Router:
     r1CIDR = self.get_cidr_from_netmask(r1netmask)
     r2CIDR = self.get_cidr_from_netmask(r2netmask)
     if r1[0] == r2[0] and r1[1] == r2[1]:
-      if int(r1[2]) == int(r2[2]) - 1 or int(r1[2]) == int(r2[2]) + 1:
-        if r1netmask == r2netmask:
-          return True
+      if r1netmask == r2netmask:
+        return True
+      #if int(r1[2]) == int(r2[2]) - 1 or int(r1[2]) == int(r2[2]) + 1:
+        #if r1netmask == r2netmask:
+          #return True
         #elif r1CIDR == r2CIDR - 1 or r1CIDR == r2CIDR + 1:
         #  return True
     return False
