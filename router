@@ -318,7 +318,7 @@ class Router:
     print("THIS IS THE FORWARDING TABLE AT THE START OF COALESCE: " + str(ft))
     print("--------------------------------------------------------------------------------")
     #ft = self.build_forward_table()
-    #matchingRoutes = []
+    matchingRoutes = []
     ftReversed = ft[::-1]
     for n in range(len(ftReversed)):
       matchingRoutes = []
