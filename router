@@ -303,21 +303,15 @@ class Router:
     r2 = route2[NTWK].split(".")
     r1netmask = route1[NMSK]
     r2netmask = route2[NMSK]
-    print("This is r1[0] " + r1[0])
-    print("This is r2[0] " + r2[0])
-    print("This is r1[1] " + r1[1])
-    print("This is r2[1] " + r2[1])
     if r1[0] == r2[0] and r1[1] == r2[1]:
-      print("First and Second part of IP equals")
       if int(r1[2]) == int(r2[2]) - 1 or int(r1[2]) == int(r2[2]) + 1:
-        print("third number is 1 off")
         if r1netmask == r2netmask:
-          print("netmasks equal!")
           return True
     return False
 
   def coalesce(self, ft):
     """ coalesce any routes that are right next to each other """
+    print("THIS IS THE FORWARDING TABLE AT THE START OF COALESCE: " + str(ft))
     #ft = self.build_forward_table()
     #matchingRoutes = []
     ftReversed = ft[::-1]
@@ -327,7 +321,6 @@ class Router:
         if self.isAdjacent(ftReversed[n], ftReversed[m]):
           matchingRoutes.append(ftReversed[n])
           matchingRoutes.append(ftReversed[m])
-      print("THESE ARE THE MATCHING ROUTES: " + str(matchingRoutes))
       for i in range(len(matchingRoutes)):
         for j in range(i+1, len(matchingRoutes)):
           if matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
