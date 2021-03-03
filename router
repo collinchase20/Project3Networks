@@ -302,13 +302,13 @@ class Router:
     r2 = route2[NTWK].split(".")
     r1netmask = route1[NMSK]
     r2netmask = route2[NMSK]
-    r1split = r1netmask.split(".")
-    r2split = r2netmask.split(".")
+    r1CIDR = self.get_cidr_from_netmask(r1netmask)
+    r2CIDR = self.get_cidr_from_netmask(r2netmask)
     if r1[0] == r2[0] and r1[1] == r2[1]:
       if int(r1[2]) == int(r2[2]) - 1 or int(r1[2]) == int(r2[2]) + 1:
         if r1netmask == r2netmask:
           return True
-        elif r1split[0] == r2split[0] and r1split[1] == r2split[1] and (int(r1split[3]) == int(r2split[3]) + 1 or int(r1split[3]) == int(r2split[3]) - 1):
+        elif r1CIDR == r2CIDR - 1 or r1CIDR == r2CIDR + 1:
           return True
     return False
 

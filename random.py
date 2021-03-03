@@ -27,3 +27,9 @@ print(get_netmask_from_cidr(23))
 
 
 print(get_netmask_from_cidr(22))
+
+print(get_netmask_from_cidr(21))
+
+print(get_netmask_from_cidr(20))
+
+print(get_netmask_from_cidr(19))
