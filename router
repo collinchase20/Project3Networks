@@ -461,6 +461,7 @@ class Router:
 
   def dump(self, packet):
     """ handles dump table requests """
+    self.coalesce()
     forwardTable = self.build_forward_table()
     tempDict = {}
     tempDict[SRCE] = packet[DEST]
