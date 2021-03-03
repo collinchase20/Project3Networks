@@ -345,7 +345,7 @@ class Router:
           self.forwardTable[key].remove(route)
     #Modify Route 1
     route2PEER = route2[PEER]
-    route2CIDR = self.get_cidr_from_netmask(route2[NMSK])
+    route2CIDR = self.get_cidr_from_netmask(route1[NMSK])
     route2CIDR = route2CIDR - 1
     for route in self.forwardTable[route2PEER]:
       if route == route2:
