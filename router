@@ -298,7 +298,6 @@ class Router:
       return False
 
   def isAdjacent(self, route1, route2):
-    print("COMPARING THESE TWO ROUTES: " + str(route1) + " and this route " + str(route2))
     r1 = route1[NTWK].split(".")
     r2 = route2[NTWK].split(".")
     r1netmask = route1[NMSK]
@@ -311,7 +310,9 @@ class Router:
 
   def coalesce(self, ft):
     """ coalesce any routes that are right next to each other """
+    print("--------------------------------------------------------------------------------")
     print("THIS IS THE FORWARDING TABLE AT THE START OF COALESCE: " + str(ft))
+    print("--------------------------------------------------------------------------------")
     #ft = self.build_forward_table()
     #matchingRoutes = []
     ftReversed = ft[::-1]
