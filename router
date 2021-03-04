@@ -425,9 +425,11 @@ class Router:
     """ handle revoke packets """
     #Save a copy of the revokation message
     self.revokes.append(packet)
-    Ftable = self.build_forward_table()
+    Ftable = self.build_forward_table(self.updates)
     revokedNetworks = packet[MESG]
     revokedSource = packet[SRCE]
+
+    print("THIS IS THE FORWARD TABLE BEFORE REVOKE : " + str(Ftable))
 
     #remove reovked packets from our forwarding table
     #indicesToRemove = []
