@@ -41,8 +41,8 @@ class Router:
   """ Your Router """
   def __init__(self, networks, asn):
     self.routes = {}
-    self.revokes = {}
-    self.updates = {}        #{192.168.0.2 : {"network": "192.168.0.0", "netmask": "255.255.255.0", "localpref": 100, "ASPath": [1], "origin": "EGP", "selfOrigin": true}}
+    self.revokes = []
+    self.updates = []       #{192.168.0.2 : {"network": "192.168.0.0", "netmask": "255.255.255.0", "localpref": 100, "ASPath": [1], "origin": "EGP", "selfOrigin": true}}
     self.relations = {}      #{192.168.0.2 : cust}
     self.sockets = {}        #{192.168.0.2 : socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)}
     self.asn = asn
@@ -371,7 +371,7 @@ class Router:
     print("Sending Update From This Source Interface Socket: " + str(srcif))
     #Map our update message, Source mapped to the Message
     #1.) Save a copy of the announcement incase we need it later
-    self.updates[packet[SRCE]] = packet
+    self.updates.append(packet)
     #Update the Forwarding Table
     #2.) Add an entry to our forwarding table
     message = packet[MESG]
@@ -424,8 +424,8 @@ class Router:
   def revoke(self, srcif, packet):
     """ handle revoke packets """
     #Save a copy of the revokation message
-    self.revokes[packet[SRCE]] = packet
-    Ftable = self.build_forward_table()
+    self.revokes.append(packet)
+    Ftable = self.build_forward_table(self.updates)
     revokedNetworks = packet[MESG]
     revokedSource = packet[SRCE]
 
@@ -462,12 +462,16 @@ class Router:
           self.send_revoke(s, packet)
     return True
 
-  def build_forward_table(self):
-    table = []
-    for key in self.forwardTable:
-      for packet in self.forwardTable[key]:
-        table.append(packet)
-    return table
+  def build_forward_table(self, updates=None):
+    if updates == None:
+      table = []
+      for key in self.forwardTable:
+        for packet in self.forwardTable[key]:
+          table.append(packet)
+      return table
+    else:
+      return updates
+
 
 
   def dump(self, packet):
