@@ -472,7 +472,11 @@ class Router:
           table.append(packet)
       return table
     else:
-      return updates
+      table = []
+      for val in updates:
+        table.append(val[MESG])
+      return table
+
 
 
 
