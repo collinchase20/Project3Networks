@@ -220,7 +220,6 @@ class Router:
     outroutes = []
 
   def get_cidr_from_netmask(self, netmask):
-    # For later use
     return (sum([bin(int(bits)).count("1") for bits in netmask.split(".")]))
 
   def get_netmask_from_cidr(self, cidr):
