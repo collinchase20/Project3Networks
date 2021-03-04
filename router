@@ -425,7 +425,7 @@ class Router:
     """ handle revoke packets """
     #Save a copy of the revokation message
     self.revokes.append(packet)
-    Ftable = self.build_forward_table(self.updates)
+    Ftable = self.build_forward_table()
     revokedNetworks = packet[MESG]
     revokedSource = packet[SRCE]
 
