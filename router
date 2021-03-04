@@ -286,7 +286,7 @@ class Router:
       return lowest_ip
 
 
-  def forward(self, srcif, packet, route=None):
+  def forward(self, packet, route=None):
     """ Forward a data packet """
     #Handling a DATA message
     if route != None:
@@ -392,24 +392,53 @@ class Router:
     print("UPDATED THE FORWARDING TABLE TO THE FOLLOWING: " + str(self.forwardTable))
     #Add to our updates which socket sent which update packet
     packet['srcif'] = srcif
+
     #Get the relation of the current socket connection
     relation = self.relations[srcif]
+
+    self.send_revoke_or_update(relation, srcif, packet, True)
+    #Get the relation of the current socket connection
+    #relation = self.relations[srcif]
     #3.)Potentially send copies of the announcement to neighboring routers
-    for s in self.sockets:
+    #for s in self.sockets:
       # Update is recieved from a customer so we send the updates to all of the neighbors not including itself
-      if relation == CUST:
+    #  if relation == CUST:
         #Make sure we do not send the update to ourself
-        if s == srcif:
-          continue
-        else:
-          self.send_update(s, packet)
+    #    if s == srcif:
+    #      continue
+    #    else:
+    #      self.send_update(s, packet)
       #Update is recieved from a peer or provider so we are only going to send the updates to your customers
-      elif relation == PEER or relation == PROV:
-        if self.relations[s] == CUST:
-          self.send_update(s, packet)
+    #  elif relation == PEER or relation == PROV:
+    #    if self.relations[s] == CUST:
+    #      self.send_update(s, packet)
 
     self.coalesce(self.build_forward_table())
     return True
+
+
+
+
+  def send_revoke_or_update(self, relation, srcif, packet, isUpdate):
+    for s in self.sockets:
+      # Update is recieved from a customer so we send the updates to all of the neighbors not including itself
+      if relation == CUST:
+        # Make sure we do not send the update to ourself
+        if s == srcif:
+          print("We are not sending to itself: " + str(s) + " " + str(srcif))
+          continue
+        else:
+          if isUpdate:
+            self.send_update(s, packet)
+          else:
+            self.send_revoke(s, packet)
+      # Update is recieved from a peer or provider so we are only going to send the updates to your customers
+      elif relation == PEER or relation == PROV:
+        if self.relations[s] == CUST:
+          if isUpdate:
+            self.send_update(s, packet)
+          else:
+            self.send_revoke(s, packet)
 
   def send_revoke(self, srcif, packet):
     revokePacket = copy.deepcopy(packet)
@@ -447,20 +476,21 @@ class Router:
 
     # Get the relation of the current socket connection
     relation = self.relations[srcif]
+    self.send_revoke_or_update(relation, srcif, packet, False)
     # 3.)Potentially send copies of the announcement to neighboring routers
-    for s in self.sockets:
+    #for s in self.sockets:
       # Update is recieved from a customer so we send the updates to all of the neighbors not including itself
-      if relation == CUST:
+    #  if relation == CUST:
         # Make sure we do not send the update to ourself
-        if s == srcif:
-          print("We are not sending to itself: " + str(s) + " " + str(srcif))
-          continue
-        else:
-          self.send_revoke(s, packet)
+    #    if s == srcif:
+    #      print("We are not sending to itself: " + str(s) + " " + str(srcif))
+    #      continue
+    #    else:
+    #      self.send_revoke(s, packet)
       # Update is recieved from a peer or provider so we are only going to send the updates to your customers
-      elif relation == PEER or relation == PROV:
-        if self.relations[s] == CUST:
-          self.send_revoke(s, packet)
+    #  elif relation == PEER or relation == PROV:
+    #    if self.relations[s] == CUST:
+    #      self.send_revoke(s, packet)
     return True
 
   def build_forward_table(self, updates=None):
@@ -497,7 +527,7 @@ class Router:
     if type == DATA:
       print("Starting Forward")
       route = self.get_route(srcif, packet[DEST])
-      return self.forward(srcif, packet, route)
+      return self.forward(packet, route)
     elif type == UPDT:
       print("Starting Update")
       return self.update(srcif, packet)
@@ -514,7 +544,8 @@ class Router:
 
   def send_error(self, conn, msg, srcif):
     """ Send a no_route error message """
-    print("SENDING AN ERROR")
+    #Send the No Route Response Message As Specified On The Assignment Page
+    #This happens if we try to forward information but are provided no route.
     tempDict = {}
     tempDict[SRCE] = srcif.replace('.2', '.1')
     tempDict[DEST] = msg[SRCE]
