@@ -318,7 +318,6 @@ class Router:
         """ Select the best route for a given address """
         peer = None
         routes = self.lookup_routes(daddr)
-        print("THESE ARE THE ROUTES AFTER LOOKING UP ROUTES: " + str(routes))
         # Rules go here
         if routes:
             # 1. Highest Preference
@@ -335,7 +334,6 @@ class Router:
             routes = self.filter_relationships(srcif, routes)
             #Get the longest prefix match
             #routes = self.get_longest_prefix_matching(routes, daddr)
-        print("THESE ARE THE ROUTES AFTER ALL THE FILTERS: " + str(routes))
         #If we dont have anything in routes our peer will stay as None
         if len(routes) == 0:
             peer = None
@@ -395,7 +393,6 @@ class Router:
             if r1netmask == r2netmask:
                 if int(r1[2]) == int(r2[2]) - 1 or int(r1[2]) == int(r2[2]) + 1:
                     return True
-                #Oops
                 elif int(r1[2]) == 0 and int(r2[2]) == 2:
                     return True
         return False
@@ -427,7 +424,6 @@ class Router:
         for key in self.forwardTable:
             for route in self.forwardTable[key]:
                 if route == route2:
-                    print("Removing This Route: " + str(route2))
                     self.forwardTable[key].remove(route)
         # Modify Route 1 to coalesce with route 2
         route1PEER = route1[PEER]
@@ -435,7 +431,6 @@ class Router:
         route1CIDR = route1CIDR - 1
         for route in self.forwardTable[route1PEER]:
             if route == route1:
-                print("Modifying This Route: " + str(route1))
                 route[NMSK] = self.get_netmask_from_cidr(route1CIDR)
 
     #Method to send an update message back
@@ -485,7 +480,6 @@ class Router:
             if relation == CUST:
                 # Make sure we do not send the update to ourself
                 if s == srcif:
-                    print("We are not sending to itself: " + str(s) + " " + str(srcif))
                     continue
                 else:
                     #If isUpdate then we are sending an update else send a revoke
@@ -614,17 +608,13 @@ class Router:
         #If we don't receive one of the five types we raise an exception
         type = packet['type']
         if type == DATA:
-            print("Starting Forward")
             route = self.get_route(srcif, packet[DEST])
             return self.forward(packet, route)
         elif type == UPDT:
-            print("Starting Update")
             return self.update(srcif, packet)
         elif type == RVKE:
-            print("Starting Revoke")
             return self.revoke(srcif, packet)
         elif type == DUMP:
-            print("Starting Dump")
             return self.dump(packet)
         elif type == "wait":
             pass
@@ -659,18 +649,10 @@ class Router:
                         if self.sockets[sock] == conn:
                             srcif = sock
                     msg = json.loads(k)
-                    print("---------------------------")
-                    print("Type: " + msg['type'])
-                    print("Source: " + msg['src'])
-                    print("Destination: " + msg['dst'])
-                    print("Message: " + json.dumps(msg['msg']))
-                    print("---------------------------")
                     if not self.handle_packet(srcif, msg):
                         self.send_error(conn, msg, srcif)
                 else:
                     return
-
-
 
 #Run Script and set up argument parser
 if __name__ == "__main__":

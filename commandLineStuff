@@ -1,6 +1,7 @@
 ./sim -h
 
 ./sim --test_dir ./tests --router ./router milestone
+./sim --test_dir ./tests --router ./router all
 
 ./sim --test_dir ./tests --router ./router ./tests/2-1-loop-select-hpref.conf
 
