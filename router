@@ -443,6 +443,7 @@ class Router:
     # Get the relation of the current socket connection
     relation = self.relations[srcif]
     self.send_revoke_or_update(relation, srcif, packet, False)
+    self.coalesce(self.build_forward_table())
     return True
 
   def build_forward_table(self):
