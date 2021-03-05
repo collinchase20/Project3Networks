@@ -488,7 +488,7 @@ class Router:
     #Remove any revoked messages
     for key in self.revokes:
       for p in self.revokes[key]:
-        self.revoke(key, packet)
+        self.revoke(key, p)
 
 
 
