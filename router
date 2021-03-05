@@ -421,6 +421,7 @@ class Router:
   def revoke(self, srcif, packet):
     """ handle revoke packets """
     #Save a copy of the revokation message
+    self.rebuild_forward_table()
     self.revokes.append(packet)
     Ftable = self.build_forward_table()
     revokedNetworks = packet[MESG]
@@ -444,18 +445,34 @@ class Router:
     self.send_revoke_or_update(relation, srcif, packet, False)
     return True
 
-  def build_forward_table(self, updates=None):
-    if updates == None:
-      table = []
-      for key in self.forwardTable:
-        for packet in self.forwardTable[key]:
-          table.append(packet)
-      return table
-    else:
-      table = []
-      for val in updates:
-        table.append(val[MESG])
-      return table
+  def build_forward_table(self):
+    #Build our forward table from every packet currently in it
+    table = []
+    for key in self.forwardTable:
+      for packet in self.forwardTable[key]:
+        table.append(packet)
+    return table
+
+  def rebuild_forward_table(self):
+    #Rebuild our forwarding table from every update that was received
+    self.forwardTable = {}
+    table = []
+    for packet in self.updates:
+      message = packet[MESG]
+      tempDictionary = {}
+      tempDictionary[NTWK] = message[NTWK]
+      tempDictionary[NMSK] = message[NMSK]
+      tempDictionary[LPRF] = message[LPRF]
+      tempDictionary[APTH] = message[APTH]
+      tempDictionary[ORIG] = message[ORIG]
+      tempDictionary[SORG] = message[SORG]
+      tempDictionary[PEER] = packet[SRCE]
+      # Check if this peer already exists in our forwarding table
+      if packet[SRCE] in self.forwardTable:
+        self.forwardTable[packet[SRCE]].append(tempDictionary)
+      else:
+        self.forwardTable[packet[SRCE]] = [tempDictionary]
+    return table
 
   def dump(self, packet):
     """ handles dump table requests """
