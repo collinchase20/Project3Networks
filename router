@@ -452,6 +452,8 @@ class Router:
         table.append(packet)
     return table
 
+
+
   def rebuild_forward_table(self):
     #Rebuild our forwarding table from every update that was received
     self.forwardTable = {}
