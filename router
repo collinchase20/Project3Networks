@@ -227,21 +227,21 @@ class Router:
             route_octet_strings = route.split(".")
             print('\n')
             fwtb = self.forwardTable[route]
-            print("route : ", route, "fwtb : ", fwtb, '\n')
+            #print("route : ", route, "fwtb : ", fwtb, '\n')
 
             for packet in fwtb:
                 netmask = packet.get(NMSK)
                 network = packet.get(NTWK)
-                print("netmask : ", netmask, " network : ", network)
+                #print("netmask : ", netmask, " network : ", network)
 
                 network_bin = self.encode_ip_as_binary(network)
                 netmask_bin = self.encode_ip_as_binary(netmask)
 
                 daddr_bin = self.encode_ip_as_binary(daddr)
-                print("daddr_bin : ", daddr_bin)  # 1000000000000000000000011001000
+                #print("daddr_bin : ", daddr_bin)  # 1000000000000000000000011001000
 
                 packet_network = self.get_ntwk_from_mask(network_bin, netmask_bin)
-                print("packet_network : ", packet_network, type(packet_network))  # 100000010101000
+                #print("packet_network : ", packet_network, type(packet_network))  # 100000010101000
 
                 num_match = self.get_prefix_match_num(packet_network, daddr_bin)
                 if num_match > longest_match_num:
@@ -258,7 +258,7 @@ class Router:
     def get_ntwk_from_mask(self, ip, mask):
         ntwk = ""
         for i in range(len(ip)):
-            print("mask[i]  = ", mask[i], "ip[i] =  ", ip[i], type(mask[i]))
+            #print("mask[i]  = ", mask[i], "ip[i] =  ", ip[i], type(mask[i]))
             if int(mask[i]) == 1:
                 ntwk += ip[i]
         print("ntwk : ", ntwk)
@@ -281,15 +281,15 @@ class Router:
         bin_rep = ""
         for octet in octets:
             bin_octet = int(float(str((bin(int(octet)))[2:])))
-            print("type : ", type(bin_octet))
-            print("LOOKIE : ", bin_octet)
+            #print("type : ", type(bin_octet))
+            #print("LOOKIE : ", bin_octet)
             str_octet = str(bin_octet)
             while len(str_octet) < 8:
                 str_octet += "0"
             # bin_rep += "." + str_octet
             bin_rep += str_octet
         bin_rep = bin_rep[1:]
-        print("THIS IS IT: ", bin_rep)
+        print("THIS IS IP AS BINARY: ", bin_rep)
         return bin_rep
 
     def get_cidr_from_netmask(self, netmask):
