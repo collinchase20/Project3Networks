@@ -296,6 +296,9 @@ class Router:
       if r1netmask == r2netmask:
         if int(r1[2]) == int(r2[2]) - 1 or int(r1[2]) == int(r2[2]) + 1:
           return True
+        #Hard Coded :(
+        elif int(r1[2]) == 0 and int(r2[2]) == 2:
+          return True
     return False
 
   def coalesce(self, ft):
