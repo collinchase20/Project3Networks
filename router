@@ -65,16 +65,8 @@ class Router:
       for packet in self.forwardTable[key]:
         # Check the first part of IP addresses
         if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
-          # Check the second part of the netmask
-          #if packet["netmask"].split(".")[1] == '255':
-            # IF the second part of the netmask is 255 then the second part of the IP addresses need to match
-            #if packet['network'].split('.')[1] == daddr.split(".")[1]:
               outroutes.append(key)
-              # Second part of the nermask was 0, so only the first part of the IP addrssses need to match
-          #else:
-            #outroutes.append(key)
     return outroutes
-
 
   def get_shortest_as_path(self, routes, daddr):
     """ select the route with the shortest AS Path, the route with the smallest AS path list """
@@ -229,9 +221,6 @@ class Router:
     netmask = "{}.{}.{}.{}".format(mask[0], mask[1], mask[2], mask[3])
     return netmask
 
-
-
-
   def get_route(self, srcif, daddr):
     """ Select the best route for a given address """
     print("Starting get_route")
@@ -359,6 +348,7 @@ class Router:
     print("--------------------------------------------------------------------------------")
 
   def send_update(self, srcif, packet):
+    #Send an Update Message to the given source interface
     updatePacket = copy.deepcopy(packet)
     updatePacket[SRCE] = srcif.replace('.2', '.1')
     updatePacket[DEST] = srcif
@@ -382,41 +372,19 @@ class Router:
     tempDictionary[ORIG] = message[ORIG]
     tempDictionary[SORG] = message[SORG]
     tempDictionary[PEER] = packet[SRCE]
-
     #Check if this peer already exists in our forwarding table
     if packet[SRCE] in self.forwardTable:
       self.forwardTable[packet[SRCE]].append(tempDictionary)
     else:
       self.forwardTable[packet[SRCE]] = [tempDictionary]
-
     print("UPDATED THE FORWARDING TABLE TO THE FOLLOWING: " + str(self.forwardTable))
     #Add to our updates which socket sent which update packet
     packet['srcif'] = srcif
-
     #Get the relation of the current socket connection
     relation = self.relations[srcif]
-
     self.send_revoke_or_update(relation, srcif, packet, True)
-    #Get the relation of the current socket connection
-    #relation = self.relations[srcif]
-    #3.)Potentially send copies of the announcement to neighboring routers
-    #for s in self.sockets:
-      # Update is recieved from a customer so we send the updates to all of the neighbors not including itself
-    #  if relation == CUST:
-        #Make sure we do not send the update to ourself
-    #    if s == srcif:
-    #      continue
-    #    else:
-    #      self.send_update(s, packet)
-      #Update is recieved from a peer or provider so we are only going to send the updates to your customers
-    #  elif relation == PEER or relation == PROV:
-    #    if self.relations[s] == CUST:
-    #      self.send_update(s, packet)
-
     self.coalesce(self.build_forward_table())
     return True
-
-
 
 
   def send_revoke_or_update(self, relation, srcif, packet, isUpdate):
@@ -441,6 +409,7 @@ class Router:
             self.send_revoke(s, packet)
 
   def send_revoke(self, srcif, packet):
+    #Send a revoke message to the given source interface
     revokePacket = copy.deepcopy(packet)
     revokePacket[SRCE] = srcif.replace('.2', '.1')
     revokePacket[DEST] = srcif
@@ -456,9 +425,7 @@ class Router:
     Ftable = self.build_forward_table()
     revokedNetworks = packet[MESG]
     revokedSource = packet[SRCE]
-
     print("THIS IS THE FORWARD TABLE BEFORE REVOKE : " + str(Ftable))
-
     #remove reovked packets from our forwarding table
     #indicesToRemove = []
     valuesToRemove = []
@@ -467,30 +434,14 @@ class Router:
         if revoke[NTWK] == Ftable[i][NTWK] and revoke[NMSK] == Ftable[i][NMSK] and revokedSource == Ftable[i][PEER]:
           valuesToRemove.append(Ftable[i])
     print("THESE ARE THE VALUES TO REMOVE: " + str(valuesToRemove))
-
     #remove from our forard table
     for key in self.forwardTable:
       for val in valuesToRemove:
         if val[PEER] == key:
           self.forwardTable[key].remove(val)
-
     # Get the relation of the current socket connection
     relation = self.relations[srcif]
     self.send_revoke_or_update(relation, srcif, packet, False)
-    # 3.)Potentially send copies of the announcement to neighboring routers
-    #for s in self.sockets:
-      # Update is recieved from a customer so we send the updates to all of the neighbors not including itself
-    #  if relation == CUST:
-        # Make sure we do not send the update to ourself
-    #    if s == srcif:
-    #      print("We are not sending to itself: " + str(s) + " " + str(srcif))
-    #      continue
-    #    else:
-    #      self.send_revoke(s, packet)
-      # Update is recieved from a peer or provider so we are only going to send the updates to your customers
-    #  elif relation == PEER or relation == PROV:
-    #    if self.relations[s] == CUST:
-    #      self.send_revoke(s, packet)
     return True
 
   def build_forward_table(self, updates=None):
@@ -505,9 +456,6 @@ class Router:
       for val in updates:
         table.append(val[MESG])
       return table
-
-
-
 
   def dump(self, packet):
     """ handles dump table requests """
