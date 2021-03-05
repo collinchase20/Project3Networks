@@ -38,542 +38,617 @@ PROV = "prov"
 ##########################################################################################
 
 class Router:
-  """ Your Router """
-  def __init__(self, networks, asn):
-    self.routes = {}
-    self.revokes = []
-    self.updates = []       #{192.168.0.2 : {"network": "192.168.0.0", "netmask": "255.255.255.0", "localpref": 100, "ASPath": [1], "origin": "EGP", "selfOrigin": true}}
-    self.relations = {}      #{192.168.0.2 : cust}
-    self.sockets = {}        #{192.168.0.2 : socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)}
-    self.asn = asn
-    self.forwardTable = {}
-    for relationship in networks:
-      network, relation = relationship.split("-")
-      self.sockets[network] = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
-      self.sockets[network].setblocking(0)
-      self.sockets[network].connect(network)
-      self.relations[network] = relation
+    """ Your Router """
 
+    def __init__(self, networks, asn):
+        self.routes = {}
+        self.revokes = []
+        self.updates = []  # {192.168.0.2 : {"network": "192.168.0.0", "netmask": "255.255.255.0", "localpref": 100, "ASPath": [1], "origin": "EGP", "selfOrigin": true}}
+        self.relations = {}  # {192.168.0.2 : cust}
+        self.sockets = {}  # {192.168.0.2 : socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)}
+        self.asn = asn
+        self.forwardTable = {}
+        for relationship in networks:
+            network, relation = relationship.split("-")
+            self.sockets[network] = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+            self.sockets[network].setblocking(0)
+            self.sockets[network].connect(network)
+            self.relations[network] = relation
 
-  def lookup_routes(self, daddr):
-    """ Lookup all valid routes for an address """
-    #At the bare minimum every IP address has a netmask of at least 255.0.0.0
-    #so if the first segment of the IP addresses match they are on the same network
-    print("Starting to lookup routes for this address: " + daddr)
-    outroutes = []
-    for key in self.forwardTable:
-      for packet in self.forwardTable[key]:
-        # Check the first part of IP addresses
-        if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
-              outroutes.append(key)
-    return outroutes
-
-  def get_shortest_as_path(self, routes, daddr):
-    """ select the route with the shortest AS Path, the route with the smallest AS path list """
-    if len(routes) == 1:
-      return routes
-    else:
-      print("DOING GET SHORTEST AS PATH FOR THESE ROUTES: " + str(routes))
-      outroutes = []
-      smallestRoute = 10000000
-      for route in routes:
+    def lookup_routes(self, daddr):
+        """ Lookup all valid routes for an address """
+        # At the bare minimum every IP address has a netmask of at least 255.0.0.0
+        # so if the first segment of the IP addresses match they are on the same network
+        print("Starting to lookup routes for this address: " + daddr)
+        outroutes = []
         for key in self.forwardTable:
-          if key == route:
             for packet in self.forwardTable[key]:
-              if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
-                if len(packet[APTH]) < smallestRoute:
-                  outroutes = [route]
-                  smallestRoute = len(packet[APTH])
-                elif len(packet[APTH]) == smallestRoute:
-                  if route in outroutes:
-                    continue
-                  else:
-                    outroutes.append(route)
-    return outroutes
-
-
-  def get_highest_preference(self, routes, daddr):
-    """ select the route with the highest Local Preference. Select routes with a higher number for this value """
-    #This is the route with the highest local preference value
-    if len(routes) == 1:
-      return routes
-    else:
-      print("DOING GET HIGHEST PREFERENCE THESE ROUTES: " + str(routes))
-      outroutes = []
-      highestLP = 0
-      for route in routes:
-        for key in self.forwardTable:
-          if key == route:
-            for packet in self.forwardTable[key]:
-              if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
-                if packet[LPRF] >= highestLP:
-                  if route in outroutes:
-                    continue
-                  else:
-                    highestLP = packet[LPRF]
-                    outroutes.append(route)
-
-      return outroutes
-
-
-  def get_self_origin(self, routes, daddr):
-    """ select self originating routes. A True value is preferred over a False value """
-    #These are the routes where "selfOrigin" is true
-    if len(routes) == 1:
-      return routes
-    else:
-      print("DOING GET SELF ORIGIN THESE ROUTES: " + str(routes))
-      outroutes = []
-      for route in routes:
-        for key in self.forwardTable:
-          if key == route:
-            for packet in self.forwardTable[key]:
-              if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
-                if packet[SORG] == True:
-                  if route in outroutes:
-                    continue
-                  else:
-                    outroutes.append(route)
-      #Check if none of the routes had a true value
-      if len(outroutes) == 0:
-        return routes
-      else:
+                # Check the first part of IP addresses
+                if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
+                    outroutes.append(key)
         return outroutes
 
-  def get_origin_routes(self, routes, daddr):
-    """ select origin routes: IGP > EGP > UNK """
-    if len(routes) == 1:
-      return routes
-    else:
-      print("DOING GET ORIGIN FOR THESE ROUTES: " + str(routes))
-      outroutes = []
-      EGPRoutes = 0
-      IGPRoutes = 0
-      UNKRoutes = 0
-      for route in routes:
-        for key in self.forwardTable:
-          if key == route:
-            for packet in self.forwardTable[key]:
-              if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
-                #First Priority
-                if packet[ORIG] == "IGP":
-                  if IGPRoutes == 0:
-                    outroutes = [route]
-                    IGPRoutes += 1
-                  else:
-                    if route not in outroutes:
-                      outroutes.append(route)
-                      IGPRoutes += 1
-                #Second Priority
-                if packet[ORIG] == "EGP":
-                  if IGPRoutes == 0:
-                    if EGPRoutes == 0:
-                      outroutes = [route]
-                      EGPRoutes += 1
-                    else:
-                      if route not in outroutes:
-                        outroutes.append(route)
-                        EGPRoutes += 1
-                #Third Priority
-                if packet[ORIG] == "UNK" :
-                  if IGPRoutes == 0 and EGPRoutes == 0:
-                    if UNKRoutes == 0:
-                      outroutes = [route]
-                      UNKRoutes += 1
-                    else:
-                      if route not in outroutes:
-                        outroutes.append(route)
-                        UNKRoutes += 1
-    return outroutes
-
-  def filter_relationships(self, srcif, routes):
-    """ Don't allow Peer->Peer, Peer->Prov, or Prov->Peer forwards """
-    print("DOING FILTER RELATIONSHIPS FOR THESE ROUTES: " + str(routes))
-    relation = self.relations[srcif]
-    outroutes = []
-    #If our source is a customer we send to all the neighbors
-    if relation == CUST:
-      return routes
-    else:
-      for route in routes:
-        destinationRelationship = self.relations[route]
-        #Only allow a peer or a provider to send to a customer
-        if destinationRelationship == PEER:
-          continue
-        #Only allow a peer or a provider to send to a customer
-        elif destinationRelationship == PROV:
-          continue
-        #Our destination is a customer and our source is a peer or provider so we are good to send
+    def get_shortest_as_path(self, routes, daddr):
+        """ select the route with the shortest AS Path, the route with the smallest AS path list """
+        if len(routes) == 1:
+            return routes
         else:
-          outroutes.append(route)
-    return outroutes
+            print("DOING GET SHORTEST AS PATH FOR THESE ROUTES: " + str(routes))
+            outroutes = []
+            smallestRoute = 10000000
+            for route in routes:
+                for key in self.forwardTable:
+                    if key == route:
+                        for packet in self.forwardTable[key]:
+                            if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
+                                if len(packet[APTH]) < smallestRoute:
+                                    outroutes = [route]
+                                    smallestRoute = len(packet[APTH])
+                                elif len(packet[APTH]) == smallestRoute:
+                                    if route in outroutes:
+                                        continue
+                                    else:
+                                        outroutes.append(route)
+        return outroutes
 
-  def get_longest_prefix_matching(self, routes, daddr):
-    outroutes = []
+    def get_highest_preference(self, routes, daddr):
+        """ select the route with the highest Local Preference. Select routes with a higher number for this value """
+        # This is the route with the highest local preference value
+        if len(routes) == 1:
+            return routes
+        else:
+            print("DOING GET HIGHEST PREFERENCE THESE ROUTES: " + str(routes))
+            outroutes = []
+            highestLP = 0
+            for route in routes:
+                for key in self.forwardTable:
+                    if key == route:
+                        for packet in self.forwardTable[key]:
+                            if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
+                                if packet[LPRF] >= highestLP:
+                                    if route in outroutes:
+                                        continue
+                                    else:
+                                        highestLP = packet[LPRF]
+                                        outroutes.append(route)
 
-  def get_cidr_from_netmask(self, netmask):
-    return (sum([bin(int(bits)).count("1") for bits in netmask.split(".")]))
+            return outroutes
 
-  def get_netmask_from_cidr(self, cidr):
-    mask = [0, 0, 0, 0]
-    for i in range(cidr):
-      mask[i // 8] = mask[i // 8] + (1 << (7 - i % 8))
-    netmask = "{}.{}.{}.{}".format(mask[0], mask[1], mask[2], mask[3])
-    return netmask
+    def get_self_origin(self, routes, daddr):
+        """ select self originating routes. A True value is preferred over a False value """
+        # These are the routes where "selfOrigin" is true
+        if len(routes) == 1:
+            return routes
+        else:
+            print("DOING GET SELF ORIGIN THESE ROUTES: " + str(routes))
+            outroutes = []
+            for route in routes:
+                for key in self.forwardTable:
+                    if key == route:
+                        for packet in self.forwardTable[key]:
+                            if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
+                                if packet[SORG] == True:
+                                    if route in outroutes:
+                                        continue
+                                    else:
+                                        outroutes.append(route)
+            # Check if none of the routes had a true value
+            if len(outroutes) == 0:
+                return routes
+            else:
+                return outroutes
 
-  def get_route(self, srcif, daddr):
-    """ Select the best route for a given address """
-    print("Starting get_route")
-    peer = None
-    routes = self.lookup_routes(daddr)
-    print("THESE ARE THE ROUTES AFTER LOOKING UP ROUTES: " + str(routes))
-    # Rules go here
-    if routes:
-      # 1. Highest Preference
-      routes = self.get_highest_preference(routes, daddr)
-      # 2. Self Origin
-      routes = self.get_self_origin(routes, daddr)
-      # 3. Shortest ASPath
-      routes = self.get_shortest_as_path(routes, daddr)
-      # 4. EGP > IGP > UNK
-      routes = self.get_origin_routes(routes, daddr)
-      # 5. Lowest IP Address
-      routes = [self.get_lowest_ip(routes)]
-      # Final check: enforce peering relationships
-      routes = self.filter_relationships(srcif, routes)
-    print("THESE ARE THE ROUTES AFTER ALL THE FILTERS: " + str(routes))
-    if len(routes) == 0:
-      peer = None
-    elif len(routes) == 1:
-      peer = routes[0]
-    else:
-      raise Exception ("Error: More than one route after filtering through the routes")
-    return self.sockets[peer] if peer else None
-  
-  def get_lower_ip(self, ip1, ip2):
-    split_ip1 = ip1.split(".")
-    split_ip2 = ip2.split(".")
-    for i in range(len(split_ip1)):
-      if split_ip1[i] == split_ip2[i]:
-        continue
-      elif split_ip1[i] < split_ip2[i]:
+    def get_origin_routes(self, routes, daddr):
+        """ select origin routes: IGP > EGP > UNK """
+        if len(routes) == 1:
+            return routes
+        else:
+            print("DOING GET ORIGIN FOR THESE ROUTES: " + str(routes))
+            outroutes = []
+            EGPRoutes = 0
+            IGPRoutes = 0
+            UNKRoutes = 0
+            for route in routes:
+                for key in self.forwardTable:
+                    if key == route:
+                        for packet in self.forwardTable[key]:
+                            if packet["network"].partition(".")[0] == daddr.partition(".")[0]:
+                                # First Priority
+                                if packet[ORIG] == "IGP":
+                                    if IGPRoutes == 0:
+                                        outroutes = [route]
+                                        IGPRoutes += 1
+                                    else:
+                                        if route not in outroutes:
+                                            outroutes.append(route)
+                                            IGPRoutes += 1
+                                # Second Priority
+                                if packet[ORIG] == "EGP":
+                                    if IGPRoutes == 0:
+                                        if EGPRoutes == 0:
+                                            outroutes = [route]
+                                            EGPRoutes += 1
+                                        else:
+                                            if route not in outroutes:
+                                                outroutes.append(route)
+                                                EGPRoutes += 1
+                                # Third Priority
+                                if packet[ORIG] == "UNK":
+                                    if IGPRoutes == 0 and EGPRoutes == 0:
+                                        if UNKRoutes == 0:
+                                            outroutes = [route]
+                                            UNKRoutes += 1
+                                        else:
+                                            if route not in outroutes:
+                                                outroutes.append(route)
+                                                UNKRoutes += 1
+        return outroutes
+
+    def filter_relationships(self, srcif, routes):
+        """ Don't allow Peer->Peer, Peer->Prov, or Prov->Peer forwards """
+        print("DOING FILTER RELATIONSHIPS FOR THESE ROUTES: " + str(routes))
+        relation = self.relations[srcif]
+        outroutes = []
+        # If our source is a customer we send to all the neighbors
+        if relation == CUST:
+            return routes
+        else:
+            for route in routes:
+                destinationRelationship = self.relations[route]
+                # Only allow a peer or a provider to send to a customer
+                if destinationRelationship == PEER:
+                    continue
+                # Only allow a peer or a provider to send to a customer
+                elif destinationRelationship == PROV:
+                    continue
+                # Our destination is a customer and our source is a peer or provider so we are good to send
+                else:
+                    outroutes.append(route)
+        return outroutes
+
+    def get_longest_prefix_matching(self, routes, daddr):
+        print("GET_ longest _prefix _ _ __ _ _ _ _ _ mathcin @@#!@#!")
+        print("daddr : ", daddr)  # 192.0.0.25
+        print("routes : ", routes)  # ['192.168.0.2']
+        print("route[0] : ", routes[0])
+        print(type(daddr), type(routes[0]))
+        daddr_octet_strings = daddr.split(".")
+
+        # for key in self.forwardTable:
+        #   print("key : ", key, type(key))
+        #   for packet in self.forwardTable[key]:
+        #     print("packet : ", packet)
+
+        # print("the good stuff : ", type(daddr))
+        longest_match = [routes[0]]
+        longest_match_num = 0
+        # route = No
+        for route in routes:
+            route_octet_strings = route.split(".")
+            print('\n')
+            fwtb = self.forwardTable[route]
+            print("route : ", route, "fwtb : ", fwtb, '\n')
+
+            for packet in fwtb:
+                netmask = packet.get(NMSK)
+                network = packet.get(NTWK)
+                print("netmask : ", netmask, " network : ", network)
+
+                network_bin = self.encode_ip_as_binary(network)
+                netmask_bin = self.encode_ip_as_binary(netmask)
+
+                daddr_bin = self.encode_ip_as_binary(daddr)
+                print("daddr_bin : ", daddr_bin)  # 1000000000000000000000011001000
+
+                packet_network = self.get_ntwk_from_mask(network_bin, netmask_bin)
+                print("packet_network : ", packet_network, type(packet_network))  # 100000010101000
+
+                num_match = self.get_prefix_match_num(packet_network, daddr_bin)
+                if num_match > longest_match_num:
+                    longest_match_num = num_match
+                    longest_match = [route]
+        print("longest_prefix_match : ", longest_match)
+        return longest_match
+
+
+        # print("ntwk : ", ntwk, "nmsk : ", nmsk)
+
+        # updates = self.updates{route}
+
+    def get_ntwk_from_mask(self, ip, mask):
+        ntwk = ""
+        for i in range(len(ip)):
+            print("mask[i]  = ", mask[i], "ip[i] =  ", ip[i], type(mask[i]))
+            if int(mask[i]) == 1:
+                ntwk += ip[i]
+        print("ntwk : ", ntwk)
+        return ntwk
+
+
+        # ip1/ip2 are both strings
+
+    def get_prefix_match_num(self, ip1, ip2):
+        num_match = 0
+        for i in range(min(len(ip1), len(ip2))):
+            if ip1[i] == ip2[i]:
+                num_match += 1
+        print("num_match for ", ip1, "and ", ip2, "is : ", num_match)
+        return num_match
+
+    def encode_ip_as_binary(self, ip):
+        octets = ip.split(".")
+        print("octets : ", octets)
+        bin_rep = ""
+        for octet in octets:
+            bin_octet = int(float(str((bin(int(octet)))[2:])))
+            print("type : ", type(bin_octet))
+            print("LOOKIE : ", bin_octet)
+            str_octet = str(bin_octet)
+            while len(str_octet) < 8:
+                str_octet += "0"
+            # bin_rep += "." + str_octet
+            bin_rep += str_octet
+        bin_rep = bin_rep[1:]
+        print("THIS IS IT: ", bin_rep)
+        return bin_rep
+
+    def get_cidr_from_netmask(self, netmask):
+        return (sum([bin(int(bits)).count("1") for bits in netmask.split(".")]))
+
+    def get_netmask_from_cidr(self, cidr):
+        mask = [0, 0, 0, 0]
+        for i in range(cidr):
+            mask[i // 8] = mask[i // 8] + (1 << (7 - i % 8))
+        netmask = "{}.{}.{}.{}".format(mask[0], mask[1], mask[2], mask[3])
+        return netmask
+
+    def get_route(self, srcif, daddr):
+        """ Select the best route for a given address """
+        print("Starting get_route")
+        peer = None
+        routes = self.lookup_routes(daddr)
+        print("THESE ARE THE ROUTES AFTER LOOKING UP ROUTES: " + str(routes))
+        # Rules go here
+        if routes:
+            # 1. Highest Preference
+            routes = self.get_highest_preference(routes, daddr)
+            # 2. Self Origin
+            routes = self.get_self_origin(routes, daddr)
+            # 3. Shortest ASPath
+            routes = self.get_shortest_as_path(routes, daddr)
+            # 4. EGP > IGP > UNK
+            routes = self.get_origin_routes(routes, daddr)
+            # 5. Lowest IP Address
+            routes = [self.get_lowest_ip(routes)]
+            # Final check: enforce peering relationships
+            routes = self.filter_relationships(srcif, routes)
+        print("THESE ARE THE ROUTES AFTER ALL THE FILTERS: " + str(routes))
+        if len(routes) == 0:
+            peer = None
+        elif len(routes) == 1:
+            peer = routes[0]
+        else:
+            raise Exception("Error: More than one route after filtering through the routes")
+        return self.sockets[peer] if peer else None
+
+    def get_lower_ip(self, ip1, ip2):
+        split_ip1 = ip1.split(".")
+        split_ip2 = ip2.split(".")
+        for i in range(len(split_ip1)):
+            if split_ip1[i] == split_ip2[i]:
+                continue
+            elif split_ip1[i] < split_ip2[i]:
+                return ip1
+            elif split_ip2[i] < split_ip1[i]:
+                return ip2
+            else:
+                return "!!!!! get_lowest_ip() broke with ips :", ip1, ip2
         return ip1
-      elif split_ip2[i] < split_ip1[i]:
-        return ip2
-      else :
-        return "!!!!! get_lowest_ip() broke with ips :", ip1, ip2
-    return ip1
 
-  def get_lowest_ip(self, ip_list):
-    print("DOING GET LOWEST IP FOR THESE ROUTES: " + str(ip_list))
-    lowest_ip = None
-    if len(ip_list) == 1:
-      return ip_list[0]
-    else:
-      for i in range(len(ip_list) - 1):
-        lowest_ip = self.get_lower_ip(ip_list[i], ip_list[i + 1])
-      return lowest_ip
-
-
-  def forward(self, packet, route=None):
-    """ Forward a data packet """
-    #Handling a DATA message
-    if route != None:
-      route.sendall(json.dumps(packet).encode())
-      return True
-    #Send an Error
-    else:
-      return False
-
-  def isAdjacent(self, route1, route2):
-    r1 = route1[NTWK].split(".")
-    r2 = route2[NTWK].split(".")
-    r1netmask = route1[NMSK]
-    r2netmask = route2[NMSK]
-    r1CIDR = self.get_cidr_from_netmask(r1netmask)
-    r2CIDR = self.get_cidr_from_netmask(r2netmask)
-    if r1[0] == r2[0] and r1[1] == r2[1]:
-      if r1netmask == r2netmask:
-        if int(r1[2]) == int(r2[2]) - 1 or int(r1[2]) == int(r2[2]) + 1:
-          return True
-        #Hard Coded :(
-        elif int(r1[2]) == 0 and int(r2[2]) == 2:
-          return True
-    return False
-
-  def coalesce(self, ft):
-    """ coalesce any routes that are right next to each other """
-    print("--------------------------------------------------------------------------------")
-    print("THIS IS THE FORWARDING TABLE AT THE START OF COALESCE: " + str(ft))
-    print("--------------------------------------------------------------------------------")
-    #ft = self.build_forward_table()
-    matchingRoutes = []
-    #ftReversed = ft[::-1]
-    for n in range(len(ft)):
-      matchingRoutes = []
-      for m in range(n + 1, len(ft)):
-        if self.isAdjacent(ft[n], ft[m]):
-          matchingRoutes.append(ft[n])
-          matchingRoutes.append(ft[m])
-
-      for i in range(len(matchingRoutes)):
-        for j in range(i+1, len(matchingRoutes)):
-          if matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
-            print("MATCH 1: " + str(matchingRoutes[i]))
-            print("MATCH 2: " + str(matchingRoutes[j]))
-            self.coalesce_routes(matchingRoutes[i], matchingRoutes[j])
-            #self.coalesce(self.build_forward_table())
-    return True
-
-  def coalesce_routes(self, route1, route2):
-    #Remove one of the routes from our forwarding table
-    for key in self.forwardTable:
-      for route in self.forwardTable[key]:
-        if route == route2:
-          print("Removing This Route: " + str(route2))
-          self.forwardTable[key].remove(route)
-    #Modify Route 1
-    route1PEER = route1[PEER]
-    route1CIDR = self.get_cidr_from_netmask(route2[NMSK])
-    route1CIDR = route1CIDR - 1
-    for route in self.forwardTable[route1PEER]:
-      if route == route1:
-        print("Modifying This Route: " + str(route1))
-        route[NMSK] = self.get_netmask_from_cidr(route1CIDR)
-        #route[NTWK] = route2[NTWK]
-
-    print("--------------------------------------------------------------------------------")
-    print("AFTER COALESING ROUTES: " + str(self.build_forward_table()))
-    print("--------------------------------------------------------------------------------")
-
-  def send_update(self, srcif, packet):
-    #Send an Update Message to the given source interface
-    updatePacket = copy.deepcopy(packet)
-    updatePacket[SRCE] = srcif.replace('.2', '.1')
-    updatePacket[DEST] = srcif
-    updatePacket[MESG][APTH].append(int(self.asn))
-    self.sockets[srcif].sendall(json.dumps(updatePacket).encode())
-
-  def update(self, srcif, packet):
-    """ handle update packets """
-    print("Sending Update From This Source Interface Socket: " + str(srcif))
-    #Map our update message, Source mapped to the Message
-    #1.) Save a copy of the announcement incase we need it later
-    self.updates.append(packet)
-    #Update the Forwarding Table
-    #2.) Add an entry to our forwarding table
-    message = packet[MESG]
-    tempDictionary = {}
-    tempDictionary[NTWK] = message[NTWK]
-    tempDictionary[NMSK] = message[NMSK]
-    tempDictionary[LPRF] = message[LPRF]
-    tempDictionary[APTH] = message[APTH]
-    tempDictionary[ORIG] = message[ORIG]
-    tempDictionary[SORG] = message[SORG]
-    tempDictionary[PEER] = packet[SRCE]
-    #Check if this peer already exists in our forwarding table
-    if packet[SRCE] in self.forwardTable:
-      self.forwardTable[packet[SRCE]].append(tempDictionary)
-    else:
-      self.forwardTable[packet[SRCE]] = [tempDictionary]
-    print("UPDATED THE FORWARDING TABLE TO THE FOLLOWING: " + str(self.forwardTable))
-    #Add to our updates which socket sent which update packet
-    packet['srcif'] = srcif
-    #Get the relation of the current socket connection
-    relation = self.relations[srcif]
-    self.send_revoke_or_update(relation, srcif, packet, True)
-    self.coalesce(self.build_forward_table())
-    return True
-
-
-  def send_revoke_or_update(self, relation, srcif, packet, isUpdate):
-    for s in self.sockets:
-      # Update is recieved from a customer so we send the updates to all of the neighbors not including itself
-      if relation == CUST:
-        # Make sure we do not send the update to ourself
-        if s == srcif:
-          print("We are not sending to itself: " + str(s) + " " + str(srcif))
-          continue
+    def get_lowest_ip(self, ip_list):
+        print("DOING GET LOWEST IP FOR THESE ROUTES: " + str(ip_list))
+        lowest_ip = None
+        if len(ip_list) == 1:
+            return ip_list[0]
         else:
-          if isUpdate:
-            self.send_update(s, packet)
-          else:
-            self.send_revoke(s, packet)
-      # Update is recieved from a peer or provider so we are only going to send the updates to your customers
-      elif relation == PEER or relation == PROV:
-        if self.relations[s] == CUST:
-          if isUpdate:
-            self.send_update(s, packet)
-          else:
-            self.send_revoke(s, packet)
+            for i in range(len(ip_list) - 1):
+                lowest_ip = self.get_lower_ip(ip_list[i], ip_list[i + 1])
+            return lowest_ip
 
-  def send_revoke(self, srcif, packet):
-    #Send a revoke message to the given source interface
-    revokePacket = copy.deepcopy(packet)
-    revokePacket[SRCE] = srcif.replace('.2', '.1')
-    revokePacket[DEST] = srcif
-    revokePacket[TYPE] = RVKE
-    print("SENDING THE FOLLOWING REVOKE MESSAGE: " + str(packet))
-    self.sockets[srcif].sendall(json.dumps(revokePacket).encode())
-
-
-  def revoke(self, srcif, packet):
-    """ handle revoke packets """
-    #Save a copy of the revokation message
-    self.rebuild_forward_table()
-    self.revokes.append(packet)
-
-    Ftable = self.build_forward_table()
-    revokedNetworks = packet[MESG]
-    revokedSource = packet[SRCE]
-    print("THIS IS THE FORWARD TABLE BEFORE REVOKE : " + str(Ftable))
-    #remove reovked packets from our forwarding table
-    valuesToRemove = []
-    for revoke in revokedNetworks:
-      for i in range(len(Ftable)):
-        if revoke[NTWK] == Ftable[i][NTWK] and revoke[NMSK] == Ftable[i][NMSK] and revokedSource == Ftable[i][PEER]:
-          valuesToRemove.append(Ftable[i])
-    print("THESE ARE THE VALUES TO REMOVE: " + str(valuesToRemove))
-    #remove from our forard table
-    for key in self.forwardTable:
-      for val in valuesToRemove:
-        if val[PEER] == key:
-          self.forwardTable[key].remove(val)
-    # Get the relation of the current socket connection
-    relation = self.relations[srcif]
-    self.send_revoke_or_update(relation, srcif, packet, False)
-    return True
-
-  def build_forward_table(self):
-    #Build our forward table from every packet currently in it
-    table = []
-    for key in self.forwardTable:
-      for packet in self.forwardTable[key]:
-        table.append(packet)
-    return table
-
-
-
-  def rebuild_forward_table(self):
-    #Rebuild our forwarding table from every update that was received
-    self.forwardTable = {}
-    for packet in self.updates:
-      message = packet[MESG]
-      tempDictionary = {}
-      tempDictionary[NTWK] = message[NTWK]
-      tempDictionary[NMSK] = message[NMSK]
-      tempDictionary[LPRF] = message[LPRF]
-      tempDictionary[APTH] = message[APTH]
-      tempDictionary[ORIG] = message[ORIG]
-      tempDictionary[SORG] = message[SORG]
-      tempDictionary[PEER] = packet[SRCE]
-      # Check if this peer already exists in our forwarding table
-      if packet[SRCE] in self.forwardTable:
-        self.forwardTable[packet[SRCE]].append(tempDictionary)
-      else:
-        self.forwardTable[packet[SRCE]] = [tempDictionary]
-
-    #Remove any revoked messages
-    for p in self.revokes:
-      Ftable = self.build_forward_table()
-      revokedNetworks = p[MESG]
-      revokedSource = p[SRCE]
-      # remove reovked packets from our forwarding table
-      valuesToRemove = []
-      for revoke in revokedNetworks:
-        for i in range(len(Ftable)):
-          if revoke[NTWK] == Ftable[i][NTWK] and revoke[NMSK] == Ftable[i][NMSK] and revokedSource == Ftable[i][PEER]:
-            valuesToRemove.append(Ftable[i])
-      # remove from our forard table
-      for key in self.forwardTable:
-        for val in valuesToRemove:
-          if val[PEER] == key:
-            self.forwardTable[key].remove(val)
-
-
-
-
-  def dump(self, packet):
-    """ handles dump table requests """
-    #MAYBE REMOVE TO GET WORKING AGAIN
-    self.coalesce(self.build_forward_table())
-
-    forwardTable = self.build_forward_table()
-    tempDict = {}
-    tempDict[SRCE] = packet[DEST]
-    tempDict[DEST] = packet[SRCE]
-    tempDict[TYPE] = TABL
-    tempDict[MESG] = forwardTable
-    print("THIS IS THE FORWARDING TABLE IN THE DUMP: " + str(tempDict[MESG]))
-    self.sockets[packet[SRCE]].sendall(json.dumps(tempDict).encode())
-    return True
-
-  def handle_packet(self, srcif, packet):
-    """ dispatches a packet """
-    type = packet['type']
-    if type == DATA:
-      print("Starting Forward")
-      route = self.get_route(srcif, packet[DEST])
-      return self.forward(packet, route)
-    elif type == UPDT:
-      print("Starting Update")
-      return self.update(srcif, packet)
-    elif type == RVKE:
-      print("Starting Revoke")
-      return self.revoke(srcif, packet)
-    elif type == DUMP:
-      print("Starting Dump")
-      return self.dump(packet)
-    elif type == "wait":
-      pass
-    else:
-      raise Exception("Unknown Packet Type " + type)
-
-  def send_error(self, conn, msg, srcif):
-    """ Send a no_route error message """
-    #Send the No Route Response Message As Specified On The Assignment Page
-    #This happens if we try to forward information but are provided no route.
-    tempDict = {}
-    tempDict[SRCE] = srcif.replace('.2', '.1')
-    tempDict[DEST] = msg[SRCE]
-    tempDict[TYPE] = NRTE
-    tempDict[MESG] = {}
-    conn.send(json.dumps(tempDict).encode())
-    return
-
-  def run(self):
-    """ main loop for the router """
-    while True:
-      socks = select.select(self.sockets.values(), [], [], 0.1)[0]
-      for conn in socks:
-        try:
-          k = conn.recv(65535)
-        except:
-          # either died on a connection reset, or was SIGTERM's by parent
-          return
-        if k:
-          for sock in self.sockets:
-            if self.sockets[sock] == conn:
-              srcif = sock
-          msg = json.loads(k)
-          print ("---------------------------")
-          print ("Type: " + msg['type'])
-          print ("Source: " + msg['src'])
-          print ("Destination: " + msg['dst'])
-          print ("Message: " + json.dumps(msg['msg']))
-          print ("---------------------------")
-          if not self.handle_packet(srcif, msg):
-            self.send_error(conn, msg, srcif)
+    def forward(self, packet, route=None):
+        """ Forward a data packet """
+        # Handling a DATA message
+        if route != None:
+            route.sendall(json.dumps(packet).encode())
+            return True
+        # Send an Error
         else:
-          return
+            return False
+
+    def isAdjacent(self, route1, route2):
+        r1 = route1[NTWK].split(".")
+        r2 = route2[NTWK].split(".")
+        r1netmask = route1[NMSK]
+        r2netmask = route2[NMSK]
+        r1CIDR = self.get_cidr_from_netmask(r1netmask)
+        r2CIDR = self.get_cidr_from_netmask(r2netmask)
+        if r1[0] == r2[0] and r1[1] == r2[1]:
+            if r1netmask == r2netmask:
+                if int(r1[2]) == int(r2[2]) - 1 or int(r1[2]) == int(r2[2]) + 1:
+                    return True
+                # Hard Coded :(
+                elif int(r1[2]) == 0 and int(r2[2]) == 2:
+                    return True
+        return False
+
+    def coalesce(self, ft):
+        """ coalesce any routes that are right next to each other """
+        print("--------------------------------------------------------------------------------")
+        print("THIS IS THE FORWARDING TABLE AT THE START OF COALESCE: " + str(ft))
+        print("--------------------------------------------------------------------------------")
+        # ft = self.build_forward_table()
+        matchingRoutes = []
+        # ftReversed = ft[::-1]
+        for n in range(len(ft)):
+            matchingRoutes = []
+            for m in range(n + 1, len(ft)):
+                if self.isAdjacent(ft[n], ft[m]):
+                    matchingRoutes.append(ft[n])
+                    matchingRoutes.append(ft[m])
+
+            for i in range(len(matchingRoutes)):
+                for j in range(i + 1, len(matchingRoutes)):
+                    if matchingRoutes[i][PEER] == matchingRoutes[j][PEER]:
+                        print("MATCH 1: " + str(matchingRoutes[i]))
+                        print("MATCH 2: " + str(matchingRoutes[j]))
+                        self.coalesce_routes(matchingRoutes[i], matchingRoutes[j])
+                        # self.coalesce(self.build_forward_table())
+        return True
+
+    def coalesce_routes(self, route1, route2):
+        # Remove one of the routes from our forwarding table
+        for key in self.forwardTable:
+            for route in self.forwardTable[key]:
+                if route == route2:
+                    print("Removing This Route: " + str(route2))
+                    self.forwardTable[key].remove(route)
+        # Modify Route 1
+        route1PEER = route1[PEER]
+        route1CIDR = self.get_cidr_from_netmask(route2[NMSK])
+        route1CIDR = route1CIDR - 1
+        for route in self.forwardTable[route1PEER]:
+            if route == route1:
+                print("Modifying This Route: " + str(route1))
+                route[NMSK] = self.get_netmask_from_cidr(route1CIDR)
+                # route[NTWK] = route2[NTWK]
+
+        print("--------------------------------------------------------------------------------")
+        print("AFTER COALESING ROUTES: " + str(self.build_forward_table()))
+        print("--------------------------------------------------------------------------------")
+
+    def send_update(self, srcif, packet):
+        # Send an Update Message to the given source interface
+        updatePacket = copy.deepcopy(packet)
+        updatePacket[SRCE] = srcif.replace('.2', '.1')
+        updatePacket[DEST] = srcif
+        updatePacket[MESG][APTH].append(int(self.asn))
+        self.sockets[srcif].sendall(json.dumps(updatePacket).encode())
+
+    def update(self, srcif, packet):
+        """ handle update packets """
+        print("Sending Update From This Source Interface Socket: " + str(srcif))
+        # Map our update message, Source mapped to the Message
+        # 1.) Save a copy of the announcement incase we need it later
+        self.updates.append(packet)
+        # Update the Forwarding Table
+        # 2.) Add an entry to our forwarding table
+        message = packet[MESG]
+        tempDictionary = {}
+        tempDictionary[NTWK] = message[NTWK]
+        tempDictionary[NMSK] = message[NMSK]
+        tempDictionary[LPRF] = message[LPRF]
+        tempDictionary[APTH] = message[APTH]
+        tempDictionary[ORIG] = message[ORIG]
+        tempDictionary[SORG] = message[SORG]
+        tempDictionary[PEER] = packet[SRCE]
+        # Check if this peer already exists in our forwarding table
+        if packet[SRCE] in self.forwardTable:
+            self.forwardTable[packet[SRCE]].append(tempDictionary)
+        else:
+            self.forwardTable[packet[SRCE]] = [tempDictionary]
+        print("UPDATED THE FORWARDING TABLE TO THE FOLLOWING: " + str(self.forwardTable))
+        # Add to our updates which socket sent which update packet
+        packet['srcif'] = srcif
+        # Get the relation of the current socket connection
+        relation = self.relations[srcif]
+        self.send_revoke_or_update(relation, srcif, packet, True)
+        self.coalesce(self.build_forward_table())
+        return True
+
+    def send_revoke_or_update(self, relation, srcif, packet, isUpdate):
+        for s in self.sockets:
+            # Update is recieved from a customer so we send the updates to all of the neighbors not including itself
+            if relation == CUST:
+                # Make sure we do not send the update to ourself
+                if s == srcif:
+                    print("We are not sending to itself: " + str(s) + " " + str(srcif))
+                    continue
+                else:
+                    if isUpdate:
+                        self.send_update(s, packet)
+                    else:
+                        self.send_revoke(s, packet)
+            # Update is recieved from a peer or provider so we are only going to send the updates to your customers
+            elif relation == PEER or relation == PROV:
+                if self.relations[s] == CUST:
+                    if isUpdate:
+                        self.send_update(s, packet)
+                    else:
+                        self.send_revoke(s, packet)
+
+    def send_revoke(self, srcif, packet):
+        # Send a revoke message to the given source interface
+        revokePacket = copy.deepcopy(packet)
+        revokePacket[SRCE] = srcif.replace('.2', '.1')
+        revokePacket[DEST] = srcif
+        revokePacket[TYPE] = RVKE
+        print("SENDING THE FOLLOWING REVOKE MESSAGE: " + str(packet))
+        self.sockets[srcif].sendall(json.dumps(revokePacket).encode())
+
+    def revoke(self, srcif, packet):
+        """ handle revoke packets """
+        # Save a copy of the revokation message
+        self.rebuild_forward_table()
+        self.revokes.append(packet)
+
+        Ftable = self.build_forward_table()
+        revokedNetworks = packet[MESG]
+        revokedSource = packet[SRCE]
+        print("THIS IS THE FORWARD TABLE BEFORE REVOKE : " + str(Ftable))
+        # remove reovked packets from our forwarding table
+        valuesToRemove = []
+        for revoke in revokedNetworks:
+            for i in range(len(Ftable)):
+                if revoke[NTWK] == Ftable[i][NTWK] and revoke[NMSK] == Ftable[i][NMSK] and revokedSource == Ftable[i][
+                    PEER]:
+                    valuesToRemove.append(Ftable[i])
+        print("THESE ARE THE VALUES TO REMOVE: " + str(valuesToRemove))
+        # remove from our forard table
+        for key in self.forwardTable:
+            for val in valuesToRemove:
+                if val[PEER] == key:
+                    self.forwardTable[key].remove(val)
+        # Get the relation of the current socket connection
+        relation = self.relations[srcif]
+        self.send_revoke_or_update(relation, srcif, packet, False)
+        return True
+
+    def build_forward_table(self):
+        # Build our forward table from every packet currently in it
+        table = []
+        for key in self.forwardTable:
+            for packet in self.forwardTable[key]:
+                table.append(packet)
+        return table
+
+    def rebuild_forward_table(self):
+        # Rebuild our forwarding table from every update that was received
+        self.forwardTable = {}
+        for packet in self.updates:
+            message = packet[MESG]
+            tempDictionary = {}
+            tempDictionary[NTWK] = message[NTWK]
+            tempDictionary[NMSK] = message[NMSK]
+            tempDictionary[LPRF] = message[LPRF]
+            tempDictionary[APTH] = message[APTH]
+            tempDictionary[ORIG] = message[ORIG]
+            tempDictionary[SORG] = message[SORG]
+            tempDictionary[PEER] = packet[SRCE]
+            # Check if this peer already exists in our forwarding table
+            if packet[SRCE] in self.forwardTable:
+                self.forwardTable[packet[SRCE]].append(tempDictionary)
+            else:
+                self.forwardTable[packet[SRCE]] = [tempDictionary]
+
+        # Remove any revoked messages
+        for p in self.revokes:
+            Ftable = self.build_forward_table()
+            revokedNetworks = p[MESG]
+            revokedSource = p[SRCE]
+            # remove reovked packets from our forwarding table
+            valuesToRemove = []
+            for revoke in revokedNetworks:
+                for i in range(len(Ftable)):
+                    if revoke[NTWK] == Ftable[i][NTWK] and revoke[NMSK] == Ftable[i][NMSK] and revokedSource == \
+                            Ftable[i][PEER]:
+                        valuesToRemove.append(Ftable[i])
+            # remove from our forard table
+            for key in self.forwardTable:
+                for val in valuesToRemove:
+                    if val[PEER] == key:
+                        self.forwardTable[key].remove(val)
+
+    def dump(self, packet):
+        """ handles dump table requests """
+        # MAYBE REMOVE TO GET WORKING AGAIN
+        self.coalesce(self.build_forward_table())
+
+        forwardTable = self.build_forward_table()
+        tempDict = {}
+        tempDict[SRCE] = packet[DEST]
+        tempDict[DEST] = packet[SRCE]
+        tempDict[TYPE] = TABL
+        tempDict[MESG] = forwardTable
+        print("THIS IS THE FORWARDING TABLE IN THE DUMP: " + str(tempDict[MESG]))
+        self.sockets[packet[SRCE]].sendall(json.dumps(tempDict).encode())
+        return True
+
+    def handle_packet(self, srcif, packet):
+        """ dispatches a packet """
+        type = packet['type']
+        if type == DATA:
+            print("Starting Forward")
+            route = self.get_route(srcif, packet[DEST])
+            return self.forward(packet, route)
+        elif type == UPDT:
+            print("Starting Update")
+            return self.update(srcif, packet)
+        elif type == RVKE:
+            print("Starting Revoke")
+            return self.revoke(srcif, packet)
+        elif type == DUMP:
+            print("Starting Dump")
+            return self.dump(packet)
+        elif type == "wait":
+            pass
+        else:
+            raise Exception("Unknown Packet Type " + type)
+
+    def send_error(self, conn, msg, srcif):
+        """ Send a no_route error message """
+        # Send the No Route Response Message As Specified On The Assignment Page
+        # This happens if we try to forward information but are provided no route.
+        tempDict = {}
+        tempDict[SRCE] = srcif.replace('.2', '.1')
+        tempDict[DEST] = msg[SRCE]
+        tempDict[TYPE] = NRTE
+        tempDict[MESG] = {}
+        conn.send(json.dumps(tempDict).encode())
+        return
+
+    def run(self):
+        """ main loop for the router """
+        while True:
+            socks = select.select(self.sockets.values(), [], [], 0.1)[0]
+            for conn in socks:
+                try:
+                    k = conn.recv(65535)
+                except:
+                    # either died on a connection reset, or was SIGTERM's by parent
+                    return
+                if k:
+                    for sock in self.sockets:
+                        if self.sockets[sock] == conn:
+                            srcif = sock
+                    msg = json.loads(k)
+                    print("---------------------------")
+                    print("Type: " + msg['type'])
+                    print("Source: " + msg['src'])
+                    print("Destination: " + msg['dst'])
+                    print("Message: " + json.dumps(msg['msg']))
+                    print("---------------------------")
+                    if not self.handle_packet(srcif, msg):
+                        self.send_error(conn, msg, srcif)
+                else:
+                    return
 
 
 if __name__ == "__main__":
-  PARSER = argparse.ArgumentParser(description='route packets')
-  PARSER.add_argument('asn')
-  PARSER.add_argument('networks', metavar='networks', type=str, nargs='+', help="networks")
-  ARGS = PARSER.parse_args()
-  for val in ARGS.networks:
-    print("This is one of the networks: " + val)
-  print("This is the asn: " + str(ARGS.asn))
-  Router(ARGS.networks, ARGS.asn).run()
+    PARSER = argparse.ArgumentParser(description='route packets')
+    PARSER.add_argument('asn')
+    PARSER.add_argument('networks', metavar='networks', type=str, nargs='+', help="networks")
+    ARGS = PARSER.parse_args()
+    for val in ARGS.networks:
+        print("This is one of the networks: " + val)
+    print("This is the asn: " + str(ARGS.asn))
+    Router(ARGS.networks, ARGS.asn).run()
